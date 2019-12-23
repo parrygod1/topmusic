@@ -4,6 +4,7 @@
 #include <vector>
 #include <sqlite3.h>
 #include "sql_query.h"
+#include "../shared/enums.h"
 
 class ServerCmd
 {

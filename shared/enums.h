@@ -1,0 +1,9 @@
+#ifndef SHAREDENUMS_H
+#define SHAREDENUMS_H
+
+#define MSG_BUFSIZE 1000
+
+enum SQLMSG {SQL_ERRGENERIC = 0, SQL_SUCCESS = 1};
+enum USRTYPE {USER, ADMIN};
+
+#endif

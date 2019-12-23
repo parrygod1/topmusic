@@ -28,16 +28,16 @@ int main()
         CONNECTED = 1;
     }
 
-    char buf[100];
+    char buf[MSG_BUFSIZE];
     while(strcmp(buf,"exit")!=0)
     {
-        memset(buf, '\0', sizeof(buf)); 
-        cin.getline(buf, 100);
+        memset(buf, '\0', MSG_BUFSIZE); 
+        cin.getline(buf, MSG_BUFSIZE);
 
         if(CONNECTED)
         {
-            server_component.sendMsgToServer(socket_descriptor, buf);
-            server_component.recieveMsgFromServer(socket_descriptor);
+            if(server_component.sendMsgToServer(socket_descriptor, buf)==1)
+                server_component.recieveMsgFromServer(socket_descriptor);
         }
 
     }

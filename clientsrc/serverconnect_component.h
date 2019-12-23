@@ -8,10 +8,12 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include "../shared/enums.h"
 
 class serverconnect_Component
 {
     private:
+    char buf[MSG_BUFSIZE];
     struct sockaddr_in server;	// structura folosita pentru conectare 
 
     public:
@@ -39,34 +41,36 @@ class serverconnect_Component
 
     int sendMsgToServer(int &socketDescriptor, char *msg)
     {
-        char buf[1000];
-        memset(buf, '\0', sizeof(buf)); 
-        strcpy(buf,msg);
-        printf ("[client]Introduceti mesajul: \n");
+        memset(buf, '\0', MSG_BUFSIZE); 
+        strcpy(buf, msg);
         fflush (stdout);
 
-        char *p = strstr(buf, "\n");
-        if(p){*p=0;}
-
-        printf("[client]Am citit %s\n",buf);
-
-        if (write (socketDescriptor,&buf,sizeof(buf)) <= 0)
-          {
-            perror ("[client]Eroare la write() spre server.\n");
-            return errno;
-          } 
+        if(buf[0]!=NULL)
+        {
+            if (write (socketDescriptor, &buf, MSG_BUFSIZE) <= 0)
+            {
+              perror ("[client]Eroare la write() spre server.\n");
+              return errno;
+            } 
+        }
+        else
+        {
+          return -1;
+        }
+        return 1;
     }
 
     int recieveMsgFromServer(int &socketDescriptor)
     {
-        char answer[1000];
+        memset(buf, '\0', MSG_BUFSIZE);
+
         /* (apel blocant pina cind serverul raspunde) */
-        if (read (socketDescriptor, &answer, sizeof(answer)) < 0)
+        if (read (socketDescriptor, &buf, MSG_BUFSIZE) < 0)
           {
             perror ("[client]Eroare la read() de la server.\n");
             return errno;
           }
-        printf ("[client]Mesajul primit este:\n%s\n", answer);
+        printf ("[client]Mesajul primit este:\n%s\n", buf);
     }
 };
 

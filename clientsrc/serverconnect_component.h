@@ -34,6 +34,7 @@ class serverconnect_Component
             perror ("[client]Eroare la connect().\n");
             return errno;
           }
+        return 1;
     }
 
     int sendMsgToServer(int &socketDescriptor, char *msg)
@@ -60,12 +61,12 @@ class serverconnect_Component
     {
         char answer[1000];
         /* (apel blocant pina cind serverul raspunde) */
-        if (read (socketDescriptor, &answer,sizeof(answer)) < 0)
+        if (read (socketDescriptor, &answer, sizeof(answer)) < 0)
           {
             perror ("[client]Eroare la read() de la server.\n");
             return errno;
           }
-        printf ("[client]Mesajul primit este:\n%s", answer);
+        printf ("[client]Mesajul primit este:\n%s\n", answer);
     }
 };
 

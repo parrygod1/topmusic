@@ -11,6 +11,7 @@
 #include "server_cmd.h"
 
 #define PORT 1234
+#define MAXERRORS 5
 
 typedef struct thData{
 	int idThread; 
@@ -23,76 +24,113 @@ int sd;		//descriptorul de socket
 int pid;
 pthread_t th[100];    //Identificatorii thread-urilor care se vor crea
 int i=0;
-ServerCmd server_cmd;
+ServerCmd *server_cmd;
 
 
 static void *treat(void *); /* functia executata de fiecare thread ce realizeaza comunicarea cu clientii */
 void raspunde(void *);
 int startListen();
 void acceptClients();
+bool readClient(void *arg, char cmd[]);
+void executeCommand(char *cmd);
+bool sendClient(void *arg, char msg[]);
 
 int main()
 {
+    server_cmd = new ServerCmd();
 
     startListen();
     acceptClients();
+
+    delete server_cmd;
 };	
 
 
 static void *treat(void * arg)
 {		
+    pthread_detach(pthread_self());	
 		struct thData tdL; 
-		tdL= *((struct thData*)arg);	
-		printf ("[thread]- %d - Asteptam mesajul...\n", tdL.idThread);
-		fflush (stdout);		 
-		pthread_detach(pthread_self());		
-		raspunde((struct thData*)arg);
+		tdL= *((struct thData*)arg);
+		fflush (stdout);		 	
+    
+    bool connected = 1;
+    char command[1000];
+    int errorcount = 0;
+
+    while(connected)
+    {
+      if(errorcount > MAXERRORS)
+      {
+          connected = 0;
+          printf("[Thread %d]",tdL.idThread);
+			    perror ("Connection closed: error threshold reached\n");
+          break;
+      }
+
+      if(!readClient((struct thData*)arg, command))
+          errorcount++;
+
+      if(strcmp(command, "disconn")==0)
+      {
+          connected = 0;
+          sendClient((struct thData*)arg, "Connection closed");
+      }
+      else if(strlen(command)>0)
+      {
+          executeCommand(command);
+          if(!sendClient((struct thData*)arg, (char*)server_cmd->getMessage().c_str()))
+            errorcount++;
+      }
+    }
 		/* am terminat cu acest client, inchidem conexiunea */
 		close ((intptr_t)arg);
 		return(NULL);	
-  		
 };
 
-void raspunde(void *arg)
+bool readClient(void *arg, char cmd[])
 {
-    int i=0;
-    char command[1000];
-    memset(command, '\0', sizeof(command));
+    fflush (stdout);
+    bzero(cmd, 1000);
 
 	  struct thData tdL; 
 	  tdL= *((struct thData*)arg);
 
-	  if (read (tdL.cl, &command,sizeof(command)) <= 0)
+	  if (read (tdL.cl, cmd, 1000) <= 0)
 		{
-			  printf("[Thread %d]\n",tdL.idThread);
+			  printf("[Thread %d]",tdL.idThread);
 			  perror ("Eroare la read() de la client.\n");
+        return 0;
 		}
-    printf ("[Thread %d]Mesajul a fost receptionat... %s\n",tdL.idThread, command);
-		  
-    server_cmd.parseCommand(std::string(command));
+    return 1;
+}
 
-    char answer[1000];
-    memset(answer, '\0', sizeof(answer));
-    answer[0]='\0';
+void executeCommand(char *cmd)
+{
+    server_cmd->parseCommand(std::string(cmd));
+}
 
-    sprintf(answer,"done");
+bool sendClient(void *arg, char msg[])
+{
+    struct thData tdL; 
+	  tdL= *((struct thData*)arg);
 
-    if(strcmp(answer,"\0")==0)
+    if(strcmp(msg,"\0")==0)
     {
-      fread(answer, 1, ftell(stdout), stdout);
+      fread(&msg, 1, ftell(stdout), stdout);
     }
 
-	  printf("[Thread %d]Trimitem mesajul inapoi... %s\n",tdL.idThread,answer);
+	  printf("[Thread %d]Trimitem mesajul inapoi... %s\n", tdL.idThread, msg);
 		    	      
-	  if (write (tdL.cl, &answer, sizeof(answer)) <= 0)
+	  if (write (tdL.cl, msg, 1000) <= 0)
 		{
 		  printf("[Thread %d] ",tdL.idThread);
 		  perror ("[Thread]Eroare la write() catre client.\n");
+      return 0;
 		}
   	else
-		printf ("[Thread %d]Mesajul a fost trasmis cu succes.\n",tdL.idThread);	
-    
-    
+		  printf ("[Thread %d]Mesajul a fost trasmis cu succes.\n",tdL.idThread);	
+
+    return 1;
 }
 
 int startListen()

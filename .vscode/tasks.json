@@ -5,15 +5,15 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "gcc build args",
+            "label": "build server",
             "command": "/usr/bin/g++",
             "args": [
                 "-std=c++0x",
                 "-g",
-                "server.cpp",
-                "server_cmd.cpp", "sql_query.cpp",
+                "serversrc/server.cpp",
+                "serversrc/server_cmd.cpp", "serversrc/sql_query.cpp",
                 "-o",
-                "${workspaceFolder}/${fileBasenameNoExtension}",
+                "${workspaceFolder}/server",
                 "-I/usr/include",
                 "-lsqlite3",
                 "-lpthread",   
@@ -26,6 +26,37 @@
                 "$gcc"
             ],
             "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "build client",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-std=c++0x",
+                "-g",
+                "clientsrc/client.cpp",
+                "clientsrc/UI_component.cpp",
+                "-o",
+                "${workspaceFolder}/client",
+                "-I/usr/include",
+                "-lsqlite3",
+                "-lpthread",   
+                "-export-dynamic"
+            ],
+            "options": {
+
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "build all",
+            "dependsOn": [
+                "build client",
+                "build server"
+            ]
         }
     ]
 }

@@ -64,6 +64,7 @@ static void *treat(void * arg)
       if(errorcount > MAXERRORS)
       {
           CONNECTED = 0;
+          LOGGEDIN = 0;
           printf("[Thread %d]",tdL.idThread);
 			    perror ("Connection closed: error threshold reached\n");
           break;
@@ -72,11 +73,11 @@ static void *treat(void * arg)
       if(!readClient((struct thData*)arg, command))
           errorcount++;
 
-      if(strcmp(command, "disconn")==0)
+      if(strcmp(command, "disconn")==0 || strcmp(command, "exit")==0)
       {
           CONNECTED = 0;
           LOGGEDIN = 0;
-          sendClient((struct thData*)arg, "Connection closed");
+          sendClient((struct thData*)arg, "999:Connection closed");
       }
       else if(strlen(command)>0)
       {

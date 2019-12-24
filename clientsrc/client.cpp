@@ -4,8 +4,12 @@
 //#include "UI_component.h"
 using namespace std;
 
+#define PORT 1234
+
 bool CONNECTED = 0;
 bool LOGGEDIN = 0;
+bool RUNNING = 1;
+char SERVERIP[] = "10.0.2.15";
 
 serverconnect_Component server_component;
 //UIComponent *user_interface;
@@ -23,11 +27,12 @@ int main()
         }
     */
     int socket_descriptor;  
-    CONNECTED = server_component.connectToServer("10.0.2.15", 1234, socket_descriptor);
+    initCmdmap();
+    CONNECTED = server_component.connectToServer(SERVERIP, PORT, socket_descriptor);
 
     char buf[MSG_BUFSIZE];
 
-    while(strcmp(buf,"exit")!=0)
+    while(RUNNING)
     {
         memset(buf, '\0', MSG_BUFSIZE); 
         cin.getline(buf, MSG_BUFSIZE);
@@ -43,6 +48,33 @@ int main()
                     LOGGEDIN = true;
                 break;
             }
+        }
+
+        switch(map_cmdval[buf])
+        {
+            case CMD_NULL:
+            break;
+
+            case CMD_USEREXIT:
+                RUNNING = false;
+                CONNECTED = false;
+                close(socket_descriptor);
+            break;
+
+            case CMD_USERCONNECT:
+                if(!CONNECTED)
+                    CONNECTED = server_component.connectToServer(SERVERIP, PORT, socket_descriptor);
+                else 
+                    printf("Already connected\n");
+            break;
+
+            case CMD_USERDISCONNECT:
+                CONNECTED = false;
+                close(socket_descriptor);
+            break;
+
+            default:
+            break;
         }
     }
 

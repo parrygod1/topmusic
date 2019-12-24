@@ -45,7 +45,19 @@ void ServerCmd::parseCommand(std::string command)
 
     switch(map_cmdval[getCmdkey(command)])
     {
+        case CMD_NULL:
+            msg = "100:Invalid command";
+            return;
+        break;
+
         case CMD_USEREXIT:
+            this->msg = "";
+            return;
+        break;
+
+        case CMD_USERCONNECT:
+            this->msg = "";
+            return;
         break;
 
         case CMD_LOGIN:
@@ -59,7 +71,7 @@ void ServerCmd::parseCommand(std::string command)
         break;
 
         case CMD_ADMINREG:
-            getCmdArgs(args, command.substr(8, command.size()), 2);
+            getCmdArgs(args, command.substr(4, command.size()), 2);
             query->addUser(ADMIN, args[0], args[1]);
         break;
 

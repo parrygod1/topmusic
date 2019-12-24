@@ -23,12 +23,10 @@ int main()
         }
     */
     int socket_descriptor;  
-    if(server_component.connectToServer("10.0.2.15", 1234, socket_descriptor)==1)
-    {
-        CONNECTED = 1;
-    }
+    CONNECTED = server_component.connectToServer("10.0.2.15", 1234, socket_descriptor);
 
     char buf[MSG_BUFSIZE];
+
     while(strcmp(buf,"exit")!=0)
     {
         memset(buf, '\0', MSG_BUFSIZE); 
@@ -36,15 +34,18 @@ int main()
 
         if(CONNECTED)
         {
-            if(server_component.sendMsgToServer(socket_descriptor, buf)==1)
+            if(server_component.sendMsgToServer(socket_descriptor, buf) == true)
                 server_component.recieveMsgFromServer(socket_descriptor);
-        }
 
+            switch(server_component.getMsgstatus())
+            {
+                case SQL_LOGINSUCCESS:
+                    LOGGEDIN = true;
+                break;
+            }
+        }
     }
 
     if(CONNECTED)
         close(socket_descriptor);
-
-    
-    
 }

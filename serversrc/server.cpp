@@ -53,15 +53,17 @@ static void *treat(void * arg)
 		tdL= *((struct thData*)arg);
 		fflush (stdout);		 	
     
-    bool connected = 1;
-    char command[1000];
+    bool CONNECTED = 1;
+    bool LOGGEDIN = 0;
     int errorcount = 0;
 
-    while(connected)
+    char command[MSG_BUFSIZE];
+  
+    while(CONNECTED)
     {
       if(errorcount > MAXERRORS)
       {
-          connected = 0;
+          CONNECTED = 0;
           printf("[Thread %d]",tdL.idThread);
 			    perror ("Connection closed: error threshold reached\n");
           break;
@@ -72,7 +74,8 @@ static void *treat(void * arg)
 
       if(strcmp(command, "disconn")==0)
       {
-          connected = 0;
+          CONNECTED = 0;
+          LOGGEDIN = 0;
           sendClient((struct thData*)arg, "Connection closed");
       }
       else if(strlen(command)>0)
@@ -121,7 +124,7 @@ bool sendClient(void *arg, char msg[])
 
 	  printf("[Thread %d]Trimitem mesajul inapoi... %s\n", tdL.idThread, msg);
 		    	      
-	  if (write (tdL.cl, msg, 1000) <= 0)
+	  if (write (tdL.cl, msg, MSG_BUFSIZE) <= 0)
 		{
 		  printf("[Thread %d] ",tdL.idThread);
 		  perror ("[Thread]Eroare la write() catre client.\n");

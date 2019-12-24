@@ -7,6 +7,12 @@ constexpr unsigned int str2int(const char* str, int h = 0)
     	return !str[h] ? 5381 : (str2int(str, h+1) * 33) ^ str[h];
 }
 
+std::string ServerCmd::getCmdkey(std::string command)
+{
+    char *p = strtok(&command[0], " ");
+    return std::string(p);
+}
+
 void ServerCmd::getCmdArgs(std::vector<std::string> &vector, std::string args, int count)
 {
     if(args[0]==' ')
@@ -37,25 +43,30 @@ void ServerCmd::parseCommand(std::string command)
     std::vector<std::string> args;
     args.clear();
 
-    if(strncmp(command.c_str(), "reg", 3)==0)
+    switch(map_cmdval[getCmdkey(command)])
     {
-        getCmdArgs(args, command.substr(3, command.size()), 2);
-        query->addUser(USER, args[0], args[1]);
-    }
-    else if(strncmp(command.c_str(), "adminreg", 8)==0)
-    {
-        getCmdArgs(args, command.substr(8, command.size()), 2);
-        query->addUser(ADMIN, args[0], args[1]);
-    }
-    else if(strncmp(command.c_str(), "login", 5)==0)
-    {
-        getCmdArgs(args, command.substr(5, command.size()), 2);
-        query->loginUser(args[0], args[1]);
-    }
-    else
-    {
-        msg = "Invalid command";
-        return;
+        case CMD_USEREXIT:
+        break;
+
+        case CMD_LOGIN:
+            getCmdArgs(args, command.substr(5, command.size()), 2);
+            query->loginUser(args[0], args[1]);
+        break;
+
+        case CMD_USERREG:
+            getCmdArgs(args, command.substr(3, command.size()), 2);
+            query->addUser(USER, args[0], args[1]);
+        break;
+
+        case CMD_ADMINREG:
+            getCmdArgs(args, command.substr(8, command.size()), 2);
+            query->addUser(ADMIN, args[0], args[1]);
+        break;
+
+        default:
+            msg = "100:Invalid command";
+            return;
+        break;
     }
 
     this->msg = query->getMessage();
@@ -69,6 +80,7 @@ std::string ServerCmd::getMessage()
 
 ServerCmd::ServerCmd()
 {
+    initCmdmap();
     query = new SQLQuery();
 }
 

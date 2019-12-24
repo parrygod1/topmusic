@@ -15,6 +15,14 @@ class serverconnect_Component
     private:
     char buf[MSG_BUFSIZE];
     struct sockaddr_in server;	// structura folosita pentru conectare 
+    SQLMSG msgstatus;
+
+    SQLMSG readMsgstatus(char *buf)
+    {
+        char digits[MSG_STATLEN+1];
+        strncpy(digits, buf, MSG_STATLEN);
+        return SQLMSG(atoi(digits));
+    }
 
     public:
 
@@ -44,6 +52,7 @@ class serverconnect_Component
         memset(buf, '\0', MSG_BUFSIZE); 
         strcpy(buf, msg);
         fflush (stdout);
+        this->msgstatus = SQL_NULL;
 
         if(buf[0]!=NULL)
         {
@@ -64,13 +73,20 @@ class serverconnect_Component
     {
         memset(buf, '\0', MSG_BUFSIZE);
 
-        /* (apel blocant pina cind serverul raspunde) */
         if (read (socketDescriptor, &buf, MSG_BUFSIZE) < 0)
-          {
+        {
             perror ("[client]Eroare la read() de la server.\n");
             return errno;
-          }
-        printf ("[client]Mesajul primit este:\n%s\n", buf);
+        }
+
+        msgstatus = readMsgstatus(buf);
+
+        printf ("[client]Mesajul primit este:\n%s\n", buf + MSG_STATLEN);
+    }
+
+    SQLMSG getMsgstatus()
+    {
+        return this->msgstatus;
     }
 };
 

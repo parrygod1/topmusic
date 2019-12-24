@@ -12,6 +12,7 @@ class ServerCmd
     SQLQuery *query;
     std::string msg;
 
+    std::string getCmdkey(std::string command);
     void getCmdArgs(std::vector<std::string> &vector, std::string args, int count);
 
     public:

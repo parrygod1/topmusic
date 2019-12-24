@@ -35,17 +35,17 @@ void SQLQuery::addUser(USRTYPE user_type, std::string name, std::string pass)
 {
     if(checkUserExists(user_type, name))
     {
-        setMessage(SQL_ERRGENERIC, ":Error: User already exists");
+        setMessage(SQL_ERRGENERIC, "Error: User already exists");
         return;
     }
     else if(!(std::any_of(std::begin(name), std::end(name), ::isalpha)))
     {
-        setMessage(SQL_ERRGENERIC, ":Error: Invalid username -- only alphanumeric characters allowed");
+        setMessage(SQL_ERRGENERIC, "Error: Invalid username -- only alphanumeric characters allowed");
         return;
     }
     else if(pass.size()<4)
     {
-        setMessage(SQL_ERRGENERIC, ":Error: Invalid password -- password must have at least 4 characters");
+        setMessage(SQL_ERRGENERIC, "Error: Invalid password -- password must have at least 4 characters");
         return;
     }
 
@@ -63,11 +63,11 @@ void SQLQuery::addUser(USRTYPE user_type, std::string name, std::string pass)
     {
         std::cout << "SQL Error: " << szErrMsg << std::endl;
         sqlite3_free(szErrMsg);
-        setMessage(SQL_ERRGENERIC, ":Error: Register failed");
+        setMessage(SQL_ERRGENERIC, "Error: Register failed");
     }
     else
     {
-        setMessage(SQL_SUCCESS, ":User registered successfully");
+        setMessage(SQL_REGSUCCESS, "User registered successfully");
     }
 }
 
@@ -81,11 +81,11 @@ void SQLQuery::loginUser(std::string name, std::string pass)
     {
         if(sqlite3_step(selectstmt) == SQLITE_ROW)
         {
-            setMessage(SQL_SUCCESS, ":Login successful");
+            setMessage(SQL_LOGINSUCCESS, "Login successful");
         }
         else
         {
-            setMessage(SQL_ERRGENERIC, ":Invalid username or password");
+            setMessage(SQL_ERRGENERIC, "Invalid username or password");
         }
         sqlite3_finalize(selectstmt);
     }
@@ -93,7 +93,7 @@ void SQLQuery::loginUser(std::string name, std::string pass)
 
 void SQLQuery::setMessage(SQLMSG s, std::string msg)
 {
-    this->message = std::to_string(s) + msg;
+    this->message = std::to_string(s) + ":" + msg;
 }
 
 std::string SQLQuery::getMessage()

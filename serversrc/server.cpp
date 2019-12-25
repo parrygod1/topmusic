@@ -32,7 +32,7 @@ void raspunde(void *);
 int startListen();
 void acceptClients();
 bool readClient(void *arg, char cmd[]);
-void executeCommand(char *cmd);
+void executeCommand(char *cmd, userData &user);
 bool sendClient(void *arg, char msg[]);
 
 int main()
@@ -53,18 +53,20 @@ static void *treat(void * arg)
 		tdL= *((struct thData*)arg);
 		fflush (stdout);		 	
     
-    bool CONNECTED = 1;
-    bool LOGGEDIN = 0;
+    userData user;
+    user.CONNECTED = true;
+    user.LOGGEDIN = false;
+    user.type = USER;
     int errorcount = 0;
 
     char command[MSG_BUFSIZE];
   
-    while(CONNECTED)
+    while(user.CONNECTED)
     {
       if(errorcount > MAXERRORS)
       {
-          CONNECTED = 0;
-          LOGGEDIN = 0;
+          user.CONNECTED = false;
+          user.LOGGEDIN = false;
           printf("[Thread %d]",tdL.idThread);
 			    perror ("Connection closed: error threshold reached\n");
           break;
@@ -75,13 +77,13 @@ static void *treat(void * arg)
 
       if(strcmp(command, "disconn")==0 || strcmp(command, "exit")==0)
       {
-          CONNECTED = 0;
-          LOGGEDIN = 0;
+          user.CONNECTED = false;
+          user.LOGGEDIN = false;
           sendClient((struct thData*)arg, "999:Connection closed");
       }
       else if(strlen(command)>0)
       {
-          executeCommand(command);
+          executeCommand(command, user);
           if(!sendClient((struct thData*)arg, (char*)server_cmd->getMessage().c_str()))
             errorcount++;
       }
@@ -108,9 +110,9 @@ bool readClient(void *arg, char cmd[])
     return 1;
 }
 
-void executeCommand(char *cmd)
+void executeCommand(char *cmd, userData &user)
 {
-    server_cmd->parseCommand(std::string(cmd));
+    server_cmd->parseCommand(std::string(cmd), user);
 }
 
 bool sendClient(void *arg, char msg[])
@@ -167,36 +169,33 @@ int startListen()
             perror ("[server]Eroare la listen().\n");
             return errno;
           }
+    return 1;
 }
 
 void acceptClients()
 {
   while (1)
-    {
-      int client;
-      thData * td; //parametru functia executata de thread     
-      socklen_t length = sizeof (from);
-
-      printf ("[server]Asteptam la portul %d...\n",PORT);
-      fflush (stdout);
-
-      /* acceptam un client (stare blocanta pina la realizarea conexiunii) */
-      if ( (client = accept (sd, (struct sockaddr *) &from, &length)) < 0)
-	    {
+  {
+    int client;
+    thData * td; //parametru functia executata de thread     
+    socklen_t length = sizeof (from);
+    printf ("[server]Asteptam la portul %d...\n",PORT);
+    fflush (stdout);
+    /* acceptam un client (stare blocanta pina la realizarea conexiunii) */
+    if ( (client = accept (sd, (struct sockaddr *) &from, &length)) < 0)
+	  {
 	      perror ("[server]Eroare la accept().\n");
 	      continue;
-	    }
-	
-        /* s-a realizat conexiunea, se astepta mesajul */
-    
-	// int idThread; //id-ul threadului
-	// int cl; //descriptorul intors de accept
+	  }
 
-	td=(struct thData*)malloc(sizeof(struct thData));	
-	td->idThread=i++;
-	td->cl=client;
+    /* s-a realizat conexiunea, se astepta mesajul */
+	  //int cl; //descriptorul intors de accept
 
-	pthread_create(&th[i], NULL, &treat, td);	      
+	  td=(struct thData*)malloc(sizeof(struct thData));	
+	  td->idThread=i++;
+	  td->cl=client;
+
+	  pthread_create(&th[i], NULL, &treat, td);	      
 				
 	} 
 }

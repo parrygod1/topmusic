@@ -44,8 +44,15 @@ int main()
 
             switch(server_component.getMsgstatus())
             {
-                case SQL_LOGINSUCCESS:
+                case SQL_USRLOGINSUCCESS:
                     LOGGEDIN = true;
+                break;
+
+                case SQL_LOGOUTSUCCESS:
+                    LOGGEDIN = false;
+                break;
+
+                default: 
                 break;
             }
         }

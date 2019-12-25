@@ -38,15 +38,16 @@ void ServerCmd::getCmdArgs(std::vector<std::string> &vector, std::string args, i
     }
 }
 
-void ServerCmd::parseCommand(std::string command)
+void ServerCmd::parseCommand(std::string command, userData &user)
 {   
     std::vector<std::string> args;
     args.clear();
 
+    //use return if we set any message in here otherwise it will be null
     switch(map_cmdval[getCmdkey(command)])
     {
         case CMD_NULL:
-            msg = "100:Invalid command";
+            setMessage(SQL_ERRGENERIC, "Invalid command");
             return;
         break;
 
@@ -61,8 +62,31 @@ void ServerCmd::parseCommand(std::string command)
         break;
 
         case CMD_LOGIN:
-            getCmdArgs(args, command.substr(5, command.size()), 2);
-            query->loginUser(args[0], args[1]);
+            if(user.LOGGEDIN == false)
+            {
+                getCmdArgs(args, command.substr(5, command.size()), 2);
+                query->loginUser(args[0], args[1], user);
+            }
+            else
+            {
+                setMessage(SQL_ERRGENERIC, "Already logged in");
+                return;
+            }
+        break;
+
+         case CMD_LOGOUT:
+            if(user.LOGGEDIN == true)
+            {
+                user.LOGGEDIN = false;
+                user.type = USER;
+                setMessage(SQL_LOGOUTSUCCESS, "Logged out");
+                return;
+            }
+            else
+            {
+                setMessage(SQL_ERRGENERIC, "Not logged into an account");
+                return;
+            }
         break;
 
         case CMD_USERREG:
@@ -74,14 +98,14 @@ void ServerCmd::parseCommand(std::string command)
             getCmdArgs(args, command.substr(4, command.size()), 2);
             query->addUser(ADMIN, args[0], args[1]);
         break;
-
-        default:
-            msg = "100:Invalid command";
-            return;
-        break;
     }
 
     this->msg = query->getMessage();
+}
+
+void ServerCmd::setMessage(SQLMSG s, std::string msg)
+{
+    this->msg = std::to_string(s) + ":" + msg;
 }
 
 std::string ServerCmd::getMessage()

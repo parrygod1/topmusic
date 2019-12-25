@@ -80,8 +80,8 @@ class serverconnect_Component
         }
 
         msgstatus = readMsgstatus(buf);
-
         printf ("[client]Mesajul primit este:\n%s\n", buf + MSG_STATLEN);
+        return 1;
     }
 
     SQLMSG getMsgstatus()

@@ -4,9 +4,9 @@ bool SQLQuery::checkUserExists(USRTYPE user_type, std::string name)
 {
     std::string checkcommand;
     if(user_type==USER)
-        std::string checkcommand = "SELECT ID FROM Users WHERE Username = \'" + name + "\';";
+        checkcommand = "SELECT ID FROM Users WHERE Username = \'" + name + "\';";
     else if(user_type==ADMIN)
-        std::string checkcommand = "SELECT ID FROM Admins WHERE Username = \'" + name + "\';";
+        checkcommand = "SELECT ID FROM Admins WHERE Username = \'" + name + "\';";
 
     struct sqlite3_stmt *selectstmt;
     rc = sqlite3_prepare_v2(db, checkcommand.c_str(), -1, &selectstmt, NULL);
@@ -33,7 +33,7 @@ bool SQLQuery::checkUserExists(USRTYPE user_type, std::string name)
 
 void SQLQuery::addUser(USRTYPE user_type, std::string name, std::string pass)
 {
-    if(checkUserExists(user_type, name))
+    if(checkUserExists(USER, name) || checkUserExists(ADMIN, name))
     {
         setMessage(SQL_ERRGENERIC, "Error: User already exists");
         return;
@@ -71,17 +71,42 @@ void SQLQuery::addUser(USRTYPE user_type, std::string name, std::string pass)
     }
 }
 
-
-void SQLQuery::loginUser(std::string name, std::string pass)
+void SQLQuery::loginUser(std::string name, std::string pass, userData &user)
 {
-    std::string checkcommand = "SELECT password FROM Users WHERE Username = \'" + name + "\';";
+    std::string checkcommand;
+    USRTYPE usert;
+
+    if(checkUserExists(USER, name))
+        {
+            checkcommand = "SELECT password FROM Users WHERE Username = \'" + name + "\';";
+            usert = USER;
+        }
+    else if(checkUserExists(ADMIN, name))
+        {
+            checkcommand = "SELECT password FROM Admins WHERE Username = \'" + name + "\';";
+            usert = ADMIN;
+        }
+    else
+        {
+            setMessage(SQL_ERRGENERIC, "Invalid username or password");
+            return;
+        }
+    
+
     struct sqlite3_stmt *selectstmt;
     rc = sqlite3_prepare_v2(db, checkcommand.c_str(), -1, &selectstmt, NULL);
+
     if(rc == SQLITE_OK)
     {
         if(sqlite3_step(selectstmt) == SQLITE_ROW)
         {
-            setMessage(SQL_LOGINSUCCESS, "Login successful");
+            user.type = usert;
+            user.LOGGEDIN = true;
+            if(usert == USER)
+                setMessage(SQL_USRLOGINSUCCESS, "Login successful");
+            else
+                setMessage(SQL_ADMINLOGINSUCCESS, "Login successful");
+            
         }
         else
         {

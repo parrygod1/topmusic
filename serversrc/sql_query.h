@@ -14,7 +14,6 @@ class SQLQuery
 
     void setMessage(SQLMSG s, std::string msg);
     bool checkUserExists(USRTYPE user_type, std::string name);
-    bool checkAdminExists(std::string name);
 
     static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 
@@ -23,7 +22,7 @@ class SQLQuery
     int rc;
     char *szErrMsg;
     void addUser(USRTYPE user_type, std::string name, std::string pass);
-    void loginUser(std::string name, std::string pass);
+    void loginUser(std::string name, std::string pass, userData &user);
     std::string getMessage();
     void openDB();
     void closeDB();

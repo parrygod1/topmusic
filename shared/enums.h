@@ -24,6 +24,7 @@ enum SQLMSG
     SQL_LOGOUTSUCCESS = 104,
     SQL_SONGSUBMITSUCCESS = 105,
     SQL_SONGAPPROVESUCCESS = 106,
+    SQL_DELETESUBMSUCCESS = 107,
     SQL_NULL = 999
 };
 
@@ -39,7 +40,8 @@ enum CMDVAL
     CMD_ADMINREG,
     CMD_SUBMITSONG,
     CMD_APPROVESONG,
-    CMD_LISTSUBMISSIONS    
+    CMD_DELETESUBM,
+    CMD_LIST   
 };
 
 static std::map<std::string, CMDVAL> map_cmdval;
@@ -57,7 +59,8 @@ inline void initCmdmap()
     map_cmdval["areg"] = CMD_ADMINREG;
     map_cmdval["submsong"] = CMD_SUBMITSONG;
     map_cmdval["appvsong"] = CMD_APPROVESONG;
-    map_cmdval["appvsong"] = CMD_APPROVESONG;
+    map_cmdval["delsubm"] = CMD_DELETESUBM;
+    map_cmdval["list"] = CMD_LIST;
     
 }
 

@@ -47,7 +47,7 @@ void ServerCmd::parseCommand(std::string command, userData &user)
     switch(map_cmdval[getCmdkey(command)])
     {
         case CMD_NULL:
-            setMessage(SQL_ERRGENERIC, "Invalid command");
+            setMessage(SQL_ERRGENERIC, "Invalid command\n");
             return;
         break;
 
@@ -74,19 +74,19 @@ void ServerCmd::parseCommand(std::string command, userData &user)
             }
         break;
 
-         case CMD_LOGOUT:
-            if(user.LOGGEDIN == true)
-            {
-                user.LOGGEDIN = false;
-                user.type = USER;
-                setMessage(SQL_LOGOUTSUCCESS, "Logged out");
-                return;
-            }
-            else
-            {
-                setMessage(SQL_ERRGENERIC, "Error: Not logged into an account");
-                return;
-            }
+        case CMD_LOGOUT:
+           if(user.LOGGEDIN == true)
+           {
+               user.LOGGEDIN = false;
+               user.type = USER;
+               setMessage(SQL_LOGOUTSUCCESS, "Logged out\n");
+               return;
+           }
+           else
+           {
+               setMessage(SQL_ERRGENERIC, "Error: Not logged into an account\n");
+               return;
+           }
         break;
 
         case CMD_USERREG:
@@ -107,7 +107,7 @@ void ServerCmd::parseCommand(std::string command, userData &user)
             }
             else
             {
-               setMessage(SQL_ERRGENERIC, "Error: You need to be logged in to execute this command");
+               setMessage(SQL_ERRGENERIC, "Error: You need to be logged in to execute this command\n");
                return;
             }
             
@@ -117,12 +117,42 @@ void ServerCmd::parseCommand(std::string command, userData &user)
             if(user.type==ADMIN)
             {
                 getCmdArgs(args, command.substr(8, command.size()), 1);
-                query->approveSong(args[0], user);
+                query->approveSong(args[0]);
             }
             else
             {
-               setMessage(SQL_ERRGENERIC, "Error: Permission denied");
+               setMessage(SQL_ERRGENERIC, "Error: Permission denied\n");
                return;
+            }
+        break;
+
+        case CMD_DELETESUBM:
+            if(user.type==ADMIN)
+            {
+                getCmdArgs(args, command.substr(7, command.size()), 1);
+                query->deleteSubmission(args[0]);
+            }
+            else
+            {
+               setMessage(SQL_ERRGENERIC, "Error: Permission denied\n");
+               return;
+            }
+        break;
+
+        case CMD_LIST:
+            getCmdArgs(args, command.substr(4, command.size()), 1);
+            if(args[0]=="subm")
+                if(user.type==ADMIN)
+                    query->listSubmissions();
+                else
+                {
+                    setMessage(SQL_ERRGENERIC, "Error: Permission denied\n");
+                    return;
+                }
+            else
+            {
+                setMessage(SQL_ERRGENERIC, "Error: Invalid list argument\n");
+                return;
             }
         break;
     }

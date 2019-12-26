@@ -15,8 +15,8 @@ class SQLQuery
     void setMessage(SQLMSG s, std::string msg);
     bool checkUserExists(USRTYPE user_type, std::string name);
     bool checkSongExists(std::string link);
-
-    static int callback(void *NotUsed, int argc, char **argv, char **azColName);
+    void getQueryResult(sqlite3_stmt *stmt, char result[]);
+    static int callback(void *NotUsed, int argc, char **argv, char **azColName); //static cause of sqlite req
 
     public:
     sqlite3 *db;
@@ -25,7 +25,9 @@ class SQLQuery
     void addUser(USRTYPE user_type, std::string name, std::string pass);
     void loginUser(std::string name, std::string pass, userData &user);
     void submitSong(std::string name, std::string desc, std::string tags, std::string link);
-    void approveSong(std::string submitted_id, userData &user);
+    void approveSong(std::string submitted_id);
+    void listSubmissions();
+    void deleteSubmission(std::string submitted_id);
     std::string getMessage();
     void openDB();
     void closeDB();

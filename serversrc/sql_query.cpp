@@ -45,15 +45,18 @@ bool SQLQuery::checkSongExists(std::string link)
     {
         if ( selected == SQLITE_ROW)
             {
+                sqlite3_finalize(selectstmt);
                 return true; 
             }
         else 
             { 
+                sqlite3_finalize(selectstmt);
                 return false;
             }
     }
     else
     {
+        sqlite3_finalize(selectstmt);
         return false;
     }
 }
@@ -115,7 +118,7 @@ void SQLQuery::loginUser(std::string name, std::string pass, userData &user)
         }
     else
         {
-            setMessage(SQL_ERRGENERIC, "Invalid username or password");
+            setMessage(SQL_ERRGENERIC, "Invalid username or password\n");
             return;
         }
     
@@ -176,32 +179,83 @@ void SQLQuery::submitSong(std::string name, std::string desc, std::string tags, 
 
 }
 
-void SQLQuery::approveSong(std::string submitted_id, userData &user)
+void SQLQuery::approveSong(std::string submitted_id)
 {
     std::string command = "INSERT INTO Songs(Name, Description, Tags, Link) SELECT Name, Description, Tags, Link FROM Submitted_Songs WHERE ID=" + submitted_id + ";";
     
     rc = sqlite3_exec(db, command.c_str(), callback, 0, &szErrMsg);
     if(rc != SQLITE_OK)
     {
-        std::cout << "SQL Error: " << szErrMsg << std::endl;
-        sqlite3_free(szErrMsg);
-        setMessage(SQL_ERRGENERIC, "Error: Approval failed");
+        setMessage(SQL_ERRGENERIC, "Error: Approval failed\n");
     }
     else
     {
-        command = "DELETE FROM Submitted_Songs WHERE ID=" + submitted_id + ";";
-        rc = sqlite3_exec(db, command.c_str(), callback, 0, &szErrMsg);
-        if(rc != SQLITE_OK)
-        {
-            std::cout << "SQL Error: " << szErrMsg << std::endl;
-            sqlite3_free(szErrMsg);
-            setMessage(SQL_ERRGENERIC, "Warning: Approved but failed to delete song ID=" + submitted_id);
-            return;
-        }
-
-        setMessage(SQL_SONGSUBMITSUCCESS, "Song approved successfully");
+        deleteSubmission(submitted_id);
+        setMessage(SQL_SONGSUBMITSUCCESS, "Song approved successfully\n");
     }
       
+}
+
+void SQLQuery::deleteSubmission(std::string submitted_id)
+{
+    std::string command = "DELETE FROM Submitted_Songs WHERE ID=" + submitted_id + ";";
+    rc = sqlite3_exec(db, command.c_str(), callback, 0, &szErrMsg);
+    if(rc != SQLITE_OK)
+    {
+        setMessage(SQL_ERRGENERIC, "Warning: Failed to delete song ID=" + submitted_id);
+    } 
+    else
+    {
+        setMessage(SQL_DELETESUBMSUCCESS, "Submission deleted\n");
+    }
+     
+}
+
+void SQLQuery::listSubmissions()
+{
+    sqlite3_stmt *stmt;
+    char command[] = "SELECT * FROM Submitted_Songs;";
+    
+    int rc = sqlite3_prepare_v2(db, command, -1, &stmt, NULL);
+    if(rc != SQLITE_OK)
+    {
+        printf("error: ", sqlite3_errmsg(db));
+        setMessage(SQL_ERRGENERIC, "Error: List failed");
+    }
+    else
+    {
+        char result[500];
+        getQueryResult(stmt, result);
+        setMessage(SQL_NULL, result);
+    }
+    sqlite3_finalize(stmt);
+}
+
+void SQLQuery::getQueryResult(sqlite3_stmt *stmt, char result[])
+{
+    memset(result, '\0', 500);
+
+    strcat(result,"\n");
+    strcat(result,"--------------------------------------------");
+    strcat(result,"\n");
+    for(int i=0;i<sqlite3_column_count(stmt);i++)
+    {
+        strcat(result, sqlite3_column_name(stmt, i));
+        strcat(result,", ");
+    }
+    strcat(result,"\n");
+    strcat(result,"--------------------------------------------");
+    strcat(result,"\n");
+    int j=0;
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
+    {
+        for(j=0;j<sqlite3_column_count(stmt);j++)
+        {
+            strcat(result, (char*)sqlite3_column_text(stmt, j));
+            strcat(result, ", ");
+        }
+        strcat(result, "\n");
+    }
 }
 
 void SQLQuery::setMessage(SQLMSG s, std::string msg)
@@ -217,14 +271,9 @@ std::string SQLQuery::getMessage()
 // This is the callback function to display the select data in the table
 int SQLQuery::callback(void *NotUsed, int argc, char **argv, char **azColName) 
 {
-   int i;
-   for(i = 0; i<argc; i++) {
-      printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-   }
-   printf("\n");
-   return 0;
+    printf("\n");
+    return 0;
 }
-
 
 void SQLQuery::openDB()
 {

@@ -54,7 +54,7 @@ class serverconnect_Component
         fflush (stdout);
         this->msgstatus = SQL_NULL;
 
-        if(buf[0]!=NULL)
+        if(buf[0]!='\0')
         {
             if (write (socketDescriptor, &buf, MSG_BUFSIZE) <= 0)
             {
@@ -80,7 +80,7 @@ class serverconnect_Component
         }
 
         msgstatus = readMsgstatus(buf);
-        printf ("[client]Mesajul primit este:\n%s\n", buf + MSG_STATLEN);
+        printf ("[server]%s\n", buf + MSG_STATLEN);
         return 1;
     }
 

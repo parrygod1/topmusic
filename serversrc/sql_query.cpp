@@ -31,6 +31,33 @@ bool SQLQuery::checkUserExists(USRTYPE user_type, std::string name)
     }
 }
 
+bool SQLQuery::checkSongExists(std::string link)
+{
+    std::string checkcommand = "SELECT ID FROM Songs WHERE Link = \'" + link + "\';";
+
+    struct sqlite3_stmt *selectstmt;
+    rc = sqlite3_prepare_v2(db, checkcommand.c_str(), -1, &selectstmt, NULL);
+    
+    auto selected = sqlite3_step(selectstmt);
+    sqlite3_finalize(selectstmt);
+    
+    if(rc == SQLITE_OK)
+    {
+        if ( selected == SQLITE_ROW)
+            {
+                return true; 
+            }
+        else 
+            { 
+                return false;
+            }
+    }
+    else
+    {
+        return false;
+    }
+}
+
 void SQLQuery::addUser(USRTYPE user_type, std::string name, std::string pass)
 {
     if(checkUserExists(USER, name) || checkUserExists(ADMIN, name))
@@ -114,6 +141,67 @@ void SQLQuery::loginUser(std::string name, std::string pass, userData &user)
         }
         sqlite3_finalize(selectstmt);
     }
+}
+
+void SQLQuery::submitSong(std::string name, std::string desc, std::string tags, std::string link)
+{
+    if(checkSongExists(link))
+    {
+        setMessage(SQL_ERRGENERIC, "Error: Song is already in list");
+        return;
+    }
+
+    if(name.size()>0 && desc.size()>0 && tags.size()>0 && link.size()>0)
+    {
+        std::string addcommand = "INSERT INTO Submitted_Songs(Name, Description, Tags, Link) VALUES (\'" + name + "\', \'" + desc + "\', \'" + tags + "\', \'" + link + "\');";
+        
+        rc = sqlite3_exec(db, addcommand.c_str(), callback, 0, &szErrMsg);
+        if(rc != SQLITE_OK)
+        {
+            std::cout << "SQL Error: " << szErrMsg << std::endl;
+            sqlite3_free(szErrMsg);
+            setMessage(SQL_ERRGENERIC, "Error: Submission failed");
+        }
+        else
+        {
+            setMessage(SQL_SONGSUBMITSUCCESS, "Song submitted successfully");
+        }
+    }
+    else
+    {
+        setMessage(SQL_ERRGENERIC, "Error: Entry must have a name, a description, tags and a link");
+    }
+
+    
+
+}
+
+void SQLQuery::approveSong(std::string submitted_id, userData &user)
+{
+    std::string command = "INSERT INTO Songs(Name, Description, Tags, Link) SELECT Name, Description, Tags, Link FROM Submitted_Songs WHERE ID=" + submitted_id + ";";
+    
+    rc = sqlite3_exec(db, command.c_str(), callback, 0, &szErrMsg);
+    if(rc != SQLITE_OK)
+    {
+        std::cout << "SQL Error: " << szErrMsg << std::endl;
+        sqlite3_free(szErrMsg);
+        setMessage(SQL_ERRGENERIC, "Error: Approval failed");
+    }
+    else
+    {
+        command = "DELETE FROM Submitted_Songs WHERE ID=" + submitted_id + ";";
+        rc = sqlite3_exec(db, command.c_str(), callback, 0, &szErrMsg);
+        if(rc != SQLITE_OK)
+        {
+            std::cout << "SQL Error: " << szErrMsg << std::endl;
+            sqlite3_free(szErrMsg);
+            setMessage(SQL_ERRGENERIC, "Warning: Approved but failed to delete song ID=" + submitted_id);
+            return;
+        }
+
+        setMessage(SQL_SONGSUBMITSUCCESS, "Song approved successfully");
+    }
+      
 }
 
 void SQLQuery::setMessage(SQLMSG s, std::string msg)

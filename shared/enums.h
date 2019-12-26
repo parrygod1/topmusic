@@ -22,11 +22,13 @@ enum SQLMSG
     SQL_ADMINLOGINSUCCESS = 102,
     SQL_REGSUCCESS = 103,
     SQL_LOGOUTSUCCESS = 104,
+    SQL_SONGSUBMITSUCCESS = 105,
+    SQL_SONGAPPROVESUCCESS = 106,
     SQL_NULL = 999
 };
 
 enum CMDVAL 
-{ 
+{ //cmd_null is the default case when a command is not recognized
     CMD_NULL,
     CMD_USEREXIT,
     CMD_USERCONNECT,
@@ -34,15 +36,17 @@ enum CMDVAL
     CMD_LOGIN,
     CMD_LOGOUT,
     CMD_USERREG,
-    CMD_ADMINREG
-    
+    CMD_ADMINREG,
+    CMD_SUBMITSONG,
+    CMD_APPROVESONG,
+    CMD_LISTSUBMISSIONS    
 };
 
 static std::map<std::string, CMDVAL> map_cmdval;
 
 inline void initCmdmap()
 {
-    //cmd_null is the default case when a command is not recognized
+    
     map_cmdval[""] = CMD_NULL; 
     map_cmdval["exit"] = CMD_USEREXIT;
     map_cmdval["conn"] = CMD_USERCONNECT;
@@ -51,6 +55,9 @@ inline void initCmdmap()
     map_cmdval["logout"] = CMD_LOGOUT;
     map_cmdval["reg"] = CMD_USERREG;
     map_cmdval["areg"] = CMD_ADMINREG;
+    map_cmdval["submsong"] = CMD_SUBMITSONG;
+    map_cmdval["appvsong"] = CMD_APPROVESONG;
+    map_cmdval["appvsong"] = CMD_APPROVESONG;
     
 }
 

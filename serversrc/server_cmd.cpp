@@ -84,7 +84,7 @@ void ServerCmd::parseCommand(std::string command, userData &user)
             }
             else
             {
-                setMessage(SQL_ERRGENERIC, "Not logged into an account");
+                setMessage(SQL_ERRGENERIC, "Error: Not logged into an account");
                 return;
             }
         break;
@@ -97,6 +97,33 @@ void ServerCmd::parseCommand(std::string command, userData &user)
         case CMD_ADMINREG:
             getCmdArgs(args, command.substr(4, command.size()), 2);
             query->addUser(ADMIN, args[0], args[1]);
+        break;
+
+        case CMD_SUBMITSONG:
+            if(user.LOGGEDIN==true)
+            {
+                getCmdArgs(args, command.substr(8, command.size()), 4);
+                query->submitSong(args[0], args[1], args[2], args[3]);
+            }
+            else
+            {
+               setMessage(SQL_ERRGENERIC, "Error: You need to be logged in to execute this command");
+               return;
+            }
+            
+        break;
+
+        case CMD_APPROVESONG:
+            if(user.type==ADMIN)
+            {
+                getCmdArgs(args, command.substr(8, command.size()), 1);
+                query->approveSong(args[0], user);
+            }
+            else
+            {
+               setMessage(SQL_ERRGENERIC, "Error: Permission denied");
+               return;
+            }
         break;
     }
 

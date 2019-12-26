@@ -6,9 +6,9 @@ using namespace std;
 
 #define PORT 1234
 
-bool CONNECTED = 0;
-bool LOGGEDIN = 0;
-bool RUNNING = 1;
+bool CONNECTED = false;
+bool LOGGEDIN = false;
+bool RUNNING = true;
 char SERVERIP[] = "10.0.2.15";
 
 serverconnect_Component server_component;
@@ -29,7 +29,11 @@ int main()
     int socket_descriptor;  
     initCmdmap();
     CONNECTED = server_component.connectToServer(SERVERIP, PORT, socket_descriptor);
-
+    if(CONNECTED==false)
+        close(socket_descriptor);
+    else
+        printf("Connected to server\n");
+    
     char buf[MSG_BUFSIZE];
 
     while(RUNNING)
@@ -37,7 +41,7 @@ int main()
         memset(buf, '\0', MSG_BUFSIZE); 
         cin.getline(buf, MSG_BUFSIZE);
 
-        if(CONNECTED)
+        if(CONNECTED==1)
         {
             if(server_component.sendMsgToServer(socket_descriptor, buf) == true)
                 server_component.recieveMsgFromServer(socket_descriptor);
@@ -69,8 +73,12 @@ int main()
             break;
 
             case CMD_USERCONNECT:
-                if(!CONNECTED)
-                    CONNECTED = server_component.connectToServer(SERVERIP, PORT, socket_descriptor);
+                if(CONNECTED==false)
+                    {
+                        CONNECTED = server_component.connectToServer(SERVERIP, PORT, socket_descriptor);
+                        if(CONNECTED==false)
+                            close(socket_descriptor);
+                    }
                 else 
                     printf("Already connected\n");
             break;

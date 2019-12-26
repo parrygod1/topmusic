@@ -26,12 +26,12 @@ class serverconnect_Component
 
     public:
 
-    int connectToServer(char *ip, int port, int &socketDescriptor)
+    bool connectToServer(char *ip, int port, int &socketDescriptor)
     {
         if ((socketDescriptor = socket (AF_INET, SOCK_STREAM, 0)) == -1)
           {
             perror ("Eroare la socket().\n");
-            return errno;
+            return false;
           } 
 
         /* umplem structura folosita pentru realizarea conexiunii cu serverul */
@@ -42,9 +42,9 @@ class serverconnect_Component
         if (connect (socketDescriptor, (struct sockaddr *) &server,sizeof (struct sockaddr)) == -1)
           {
             perror ("[client]Eroare la connect().\n");
-            return errno;
+            return false;
           }
-        return 1;
+        return true;
     }
 
     int sendMsgToServer(int &socketDescriptor, char *msg)

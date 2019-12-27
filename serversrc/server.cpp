@@ -96,12 +96,12 @@ static void *treat(void * arg)
 bool readClient(void *arg, char cmd[])
 {
     fflush (stdout);
-    bzero(cmd, 1000);
+    bzero(cmd, MSG_BUFSIZE);
 
 	  struct thData tdL; 
 	  tdL= *((struct thData*)arg);
 
-	  if (read (tdL.cl, cmd, 1000) <= 0)
+	  if (read (tdL.cl, cmd, MSG_BUFSIZE) <= 0)
 		{
 			  printf("[Thread %d]",tdL.idThread);
 			  perror ("Eroare la read() de la client.\n");

@@ -38,6 +38,36 @@ void ServerCmd::getCmdArgs(std::vector<std::string> &vector, std::string args, i
     }
 }
 
+void ServerCmd::getCmdStrings(std::vector<std::string> &vector, std::string args)
+{
+    if(args[0]==' ')
+        args.erase(0,1);
+    
+    std::string temp;
+    bool reading_chars = false;
+    for(int i=0; i < args.size(); i++)
+    {
+        if((args[i]==' ' && args[i+1]=='\"') || (i==0 && args[i]=='\"'))
+        {
+            if(i!=0)
+                i++;
+            reading_chars = true;
+            temp = "";
+            continue;
+        }
+        if(reading_chars)
+        {
+            if(args[i]=='\"' && (args[i+1]==' ' || args[i+1] == '\0'))
+            {
+                reading_chars = false;
+                vector.push_back(temp);
+                continue;
+            }
+            temp+=args[i];
+        }
+    }
+}
+
 void ServerCmd::parseCommand(std::string command, userData &user)
 {   
     std::vector<std::string> args;
@@ -102,7 +132,12 @@ void ServerCmd::parseCommand(std::string command, userData &user)
         case CMD_SUBMITSONG:
             if(user.LOGGEDIN==true)
             {
-                getCmdArgs(args, command.substr(8, command.size()), 4);
+                getCmdStrings(args, command.substr(8, command.size()));
+                if(args.size() < 4 || !(args[0].size()>0 && args[1].size()>0 && args[2].size()>0 && args[3].size()>0))
+                {
+                    setMessage(SQL_ERRGENERIC, "Error: Invalid arguments -- Submit format: submsong \"title...\" \"description...\" \"tag1, tag2...\" \"link.com...\"\n");
+                    return;
+                }
                 query->submitSong(args[0], args[1], args[2], args[3]);
             }
             else

@@ -43,20 +43,17 @@ bool SQLQuery::checkSongExists(std::string link)
     
     if(rc == SQLITE_OK)
     {
-        if ( selected == SQLITE_ROW)
+        if (selected == SQLITE_ROW)
             {
-                sqlite3_finalize(selectstmt);
                 return true; 
             }
         else 
             { 
-                sqlite3_finalize(selectstmt);
                 return false;
             }
     }
     else
     {
-        sqlite3_finalize(selectstmt);
         return false;
     }
 }
@@ -191,7 +188,6 @@ void SQLQuery::approveSong(std::string submitted_id)
     else
     {
         deleteSubmission(submitted_id);
-        setMessage(SQL_SONGSUBMITSUCCESS, "Song approved successfully\n");
     }
       
 }
@@ -206,7 +202,7 @@ void SQLQuery::deleteSubmission(std::string submitted_id)
     } 
     else
     {
-        setMessage(SQL_DELETESUBMSUCCESS, "Submission deleted\n");
+        setMessage(SQL_DELETESUBMSUCCESS, "Cleared submission\n");
     }
      
 }
@@ -271,7 +267,6 @@ std::string SQLQuery::getMessage()
 // This is the callback function to display the select data in the table
 int SQLQuery::callback(void *NotUsed, int argc, char **argv, char **azColName) 
 {
-    printf("\n");
     return 0;
 }
 

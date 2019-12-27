@@ -15,6 +15,7 @@ class ServerCmd
     void setMessage(SQLMSG s, std::string msg);
     std::string getCmdkey(std::string command);
     void getCmdArgs(std::vector<std::string> &vector, std::string args, int count);
+    void getCmdStrings(std::vector<std::string> &vector, std::string args);
 
     public:
     void parseCommand(std::string command, userData &user);

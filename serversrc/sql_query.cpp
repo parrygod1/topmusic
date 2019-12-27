@@ -105,12 +105,12 @@ void SQLQuery::loginUser(std::string name, std::string pass, userData &user)
 
     if(checkUserExists(USER, name))
         {
-            checkcommand = "SELECT password FROM Users WHERE Username = \'" + name + "\';";
+            checkcommand = "SELECT ID FROM Users WHERE Username = \'" + name + "\' and Password = \'" + pass + "\';";
             usert = USER;
         }
     else if(checkUserExists(ADMIN, name))
         {
-            checkcommand = "SELECT password FROM Admins WHERE Username = \'" + name + "\';";
+            checkcommand = "SELECT ID FROM Admins WHERE Username = \'" + name + "\' and Password = \'" + pass + "\';";
             usert = ADMIN;
         }
     else
@@ -120,7 +120,7 @@ void SQLQuery::loginUser(std::string name, std::string pass, userData &user)
         }
     
 
-    struct sqlite3_stmt *selectstmt;
+    sqlite3_stmt *selectstmt;
     rc = sqlite3_prepare_v2(db, checkcommand.c_str(), -1, &selectstmt, NULL);
 
     if(rc == SQLITE_OK)
@@ -133,8 +133,7 @@ void SQLQuery::loginUser(std::string name, std::string pass, userData &user)
                 setMessage(SQL_USRLOGINSUCCESS, "Login successful");
             else
                 setMessage(SQL_ADMINLOGINSUCCESS, "Login successful");
-            
-        }
+        } 
         else
         {
             setMessage(SQL_ERRGENERIC, "Invalid username or password");
@@ -207,6 +206,35 @@ void SQLQuery::deleteSubmission(std::string submitted_id)
      
 }
 
+void SQLQuery::findTags(std::vector<std::string> &tags)
+{
+    sqlite3_stmt *stmt;
+    std::string command = "SELECT * FROM Songs WHERE ";
+
+    int i;
+    for(i=0;i<tags.size();i++)
+    {
+        if(i!=0)
+            command += " or ";
+        command += "Tags like (\'%" + tags[i] + "%\')";
+    }
+    command += ";";
+
+    int rc = sqlite3_prepare_v2(db, command.c_str(), -1, &stmt, NULL);
+    if(rc != SQLITE_OK)
+    {
+        printf("error: %s", sqlite3_errmsg(db));
+        setMessage(SQL_ERRGENERIC, "Error: Could not find tags");
+    }
+    else
+    {
+        char result[500];
+        getQueryResult(stmt, result);
+        setMessage(SQL_NULL, result);
+    }
+    sqlite3_finalize(stmt);
+}
+
 void SQLQuery::listSubmissions()
 {
     sqlite3_stmt *stmt;
@@ -215,7 +243,27 @@ void SQLQuery::listSubmissions()
     int rc = sqlite3_prepare_v2(db, command, -1, &stmt, NULL);
     if(rc != SQLITE_OK)
     {
-        printf("error: ", sqlite3_errmsg(db));
+        printf("error: %s", sqlite3_errmsg(db));
+        setMessage(SQL_ERRGENERIC, "Error: List failed");
+    }
+    else
+    {
+        char result[500];
+        getQueryResult(stmt, result);
+        setMessage(SQL_NULL, result);
+    }
+    sqlite3_finalize(stmt);
+}
+
+void SQLQuery::listAll()
+{
+    sqlite3_stmt *stmt;
+    char command[] = "SELECT * FROM Songs;";
+    
+    int rc = sqlite3_prepare_v2(db, command, -1, &stmt, NULL);
+    if(rc != SQLITE_OK)
+    {
+        printf("error: %s", sqlite3_errmsg(db));
         setMessage(SQL_ERRGENERIC, "Error: List failed");
     }
     else
@@ -230,8 +278,8 @@ void SQLQuery::listSubmissions()
 void SQLQuery::getQueryResult(sqlite3_stmt *stmt, char result[])
 {
     memset(result, '\0', 500);
-
-    strcat(result,"\n");
+    strcat(result, "\n");
+    /*strcat(result,"\n");
     strcat(result,"--------------------------------------------");
     strcat(result,"\n");
     for(int i=0;i<sqlite3_column_count(stmt);i++)
@@ -242,13 +290,15 @@ void SQLQuery::getQueryResult(sqlite3_stmt *stmt, char result[])
     strcat(result,"\n");
     strcat(result,"--------------------------------------------");
     strcat(result,"\n");
-    int j=0;
+    int j=0;*/
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
     {
-        for(j=0;j<sqlite3_column_count(stmt);j++)
+        for(int j=0;j<sqlite3_column_count(stmt);j++)
         {
+            strcat(result, sqlite3_column_name(stmt, j));
+            strcat(result, ": ");
             strcat(result, (char*)sqlite3_column_text(stmt, j));
-            strcat(result, ", ");
+            strcat(result, "\n");
         }
         strcat(result, "\n");
     }

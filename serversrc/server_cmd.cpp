@@ -2,6 +2,8 @@
 #include <string>
 #include <cstring>
 
+#define COUNTLESS 9999
+
 constexpr unsigned int str2int(const char* str, int h = 0)
 {
     	return !str[h] ? 5381 : (str2int(str, h+1) * 33) ^ str[h];
@@ -24,18 +26,33 @@ void ServerCmd::getCmdArgs(std::vector<std::string> &vector, std::string args, i
     if(p)
         vector.push_back(std::string(p));
 
-    for(count; count > 0; count--)
-    {   
-        p = strtok (NULL, " ");
-        if(p)   
+    if(count!=COUNTLESS)
+    {
+        for(count; count > 0; count--)
         {   
-            vector.push_back(std::string(p));
-        } 
-        else
-        {
-            vector.push_back(std::string(""));
-        }  
+            p = strtok (NULL, " ");
+            if(p)   
+            {   
+                vector.push_back(std::string(p));
+            } 
+            else
+            {
+                vector.push_back(std::string(""));
+            }  
+        }
     }
+    else
+    {
+        while(p)
+        {
+            p = strtok (NULL, " ");
+            if(p)   
+            {   
+                vector.push_back(std::string(p));
+            }
+        }
+    }
+    
 }
 
 void ServerCmd::getCmdStrings(std::vector<std::string> &vector, std::string args)
@@ -174,16 +191,33 @@ void ServerCmd::parseCommand(std::string command, userData &user)
             }
         break;
 
+        case CMD_FINDTAGS:
+            getCmdArgs(args, command.substr(8, command.size()), COUNTLESS);
+            query->findTags(args);
+        break;
+
         case CMD_LIST:
             getCmdArgs(args, command.substr(4, command.size()), 1);
             if(args[0]=="subm")
-                if(user.type==ADMIN)
+            {   if(user.type==ADMIN)
                     query->listSubmissions();
                 else
                 {
                     setMessage(SQL_ERRGENERIC, "Error: Permission denied\n");
                     return;
                 }
+            }
+            else if(args[0]=="all")
+            {
+                if(user.LOGGEDIN)
+                    query->listAll();
+                else
+                {
+                    setMessage(SQL_ERRGENERIC, "Error: Not logged in\n");
+                    return;
+                }
+                
+            }
             else
             {
                 setMessage(SQL_ERRGENERIC, "Error: Invalid list argument\n");

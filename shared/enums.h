@@ -41,7 +41,8 @@ enum CMDVAL
     CMD_SUBMITSONG,
     CMD_APPROVESONG,
     CMD_DELETESUBM,
-    CMD_LIST   
+    CMD_LIST,
+    CMD_FINDTAGS
 };
 
 static std::map<std::string, CMDVAL> map_cmdval;
@@ -61,7 +62,12 @@ inline void initCmdmap()
     map_cmdval["appvsong"] = CMD_APPROVESONG;
     map_cmdval["delsubm"] = CMD_DELETESUBM;
     map_cmdval["list"] = CMD_LIST;
-    
+    map_cmdval["findtags"] = CMD_FINDTAGS;
 }
+
+/*
+How to use:
+
+*/
 
 #endif

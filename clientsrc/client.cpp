@@ -32,7 +32,11 @@ int main()
     if(CONNECTED==false)
         close(socket_descriptor);
     else
-        printf("Connected to server\n");
+        {
+            printf("Connected to server\n");
+            //server_component.sendMsgToServer(socket_descriptor, "login test asdf");
+            //server_component.recieveMsgFromServer(socket_descriptor);
+        }
     
     char buf[MSG_BUFSIZE];
 
@@ -41,7 +45,7 @@ int main()
         memset(buf, '\0', MSG_BUFSIZE); 
         cin.getline(buf, MSG_BUFSIZE);
 
-        if(CONNECTED==1)
+        if(CONNECTED)
         {
             if(server_component.sendMsgToServer(socket_descriptor, buf) == true)
                 server_component.recieveMsgFromServer(socket_descriptor);
@@ -98,5 +102,8 @@ int main()
     }
 
     if(CONNECTED)
-        close(socket_descriptor);
+        {
+            server_component.sendMsgToServer(socket_descriptor, "exit");
+            close(socket_descriptor);
+        }
 }

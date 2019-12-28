@@ -23,6 +23,7 @@ class SQLQuery
     bool checkSongIDExists(std::string song_id);
     bool checkVoteExists(std::string user_id, std::string song_id);
     void getQueryResult(sqlite3_stmt *stmt, char result[]);
+    void updateScores();
     static int callback(void *NotUsed, int argc, char **argv, char **azColName); //static cause of sqlite req
 
     public:

@@ -1,5 +1,4 @@
 #include "sql_query.h"
-
 bool SQLQuery::checkUserExists(USRTYPE user_type, std::string name)
 {
     std::string checkcommand;
@@ -293,6 +292,7 @@ void SQLQuery::vote(std::string user_id, std::string song_id, std::string vote_v
         else
         {
             setMessage(SQL_VOTESUCCESS, "Vote registered");
+            updateScores();
         }
     }
     else
@@ -364,9 +364,26 @@ void SQLQuery::listAll()
     }
     else
     {
-        char result[500];
+        char result[MSG_BUFSIZE];
         getQueryResult(stmt, result);
         setMessage(SQL_NULL, result);
+    }
+    sqlite3_finalize(stmt);
+}
+
+void SQLQuery::updateScores()
+{
+    char command[] = "UPDATE Songs SET Score = (SELECT sum(Votes.Vote) FROM Votes WHERE Songs.ID=Votes.SONGID);";
+    sqlite3_stmt *stmt;
+
+    int rc = sqlite3_prepare_v2(db, command, -1, &stmt, NULL);
+    if(rc != SQLITE_OK)
+    {
+        printf("SQLerror: Failed to update songs scores -- %s\n", sqlite3_errmsg(db));
+    }
+    else
+    {
+        printf("Updated songs scores\n");
     }
     sqlite3_finalize(stmt);
 }

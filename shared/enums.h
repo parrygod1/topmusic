@@ -2,7 +2,7 @@
 #define SHAREDENUMS_H
 #include <map>
 
-#define MSG_BUFSIZE 1000
+#define MSG_BUFSIZE 5000
 #define MSG_STATLEN 4
 
 enum USRTYPE {USER, ADMIN};

@@ -47,8 +47,7 @@ int main()
 
 
 static void *treat(void * arg)
-{		
-    pthread_detach(pthread_self());	
+{			
 		struct thData tdL; 
 		tdL= *((struct thData*)arg);
 		fflush (stdout);		 	
@@ -68,7 +67,9 @@ static void *treat(void * arg)
           user.CONNECTED = false;
           user.LOGGEDIN = false;
           printf("[Thread %d]",tdL.idThread);
+          
 			    perror ("Connection closed: error threshold reached\n");
+
           break;
       }
 
@@ -90,6 +91,7 @@ static void *treat(void * arg)
     }
 		/* am terminat cu acest client, inchidem conexiunea */
 		close ((intptr_t)arg);
+    pthread_detach(pthread_self());
 		return(NULL);	
 };
 

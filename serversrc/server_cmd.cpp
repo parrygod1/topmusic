@@ -1,8 +1,7 @@
 #include "server_cmd.h"
 #include <string>
 #include <cstring>
-
-#define COUNTLESS 9999
+#include <thread>
 
 constexpr unsigned int str2int(const char* str, int h = 0)
 {

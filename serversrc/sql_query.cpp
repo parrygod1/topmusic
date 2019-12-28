@@ -58,6 +58,60 @@ bool SQLQuery::checkSongExists(std::string link)
     }
 }
 
+bool SQLQuery::checkSongIDExists(std::string song_id)
+{
+    std::string checkcommand = "SELECT ID FROM Songs WHERE ID = \'" + song_id + "\';";
+
+    struct sqlite3_stmt *selectstmt;
+    rc = sqlite3_prepare_v2(db, checkcommand.c_str(), -1, &selectstmt, NULL);
+    
+    auto selected = sqlite3_step(selectstmt);
+    sqlite3_finalize(selectstmt);
+    
+    if(rc == SQLITE_OK)
+    {
+        if (selected == SQLITE_ROW)
+            {
+                return true; 
+            }
+        else 
+            { 
+                return false;
+            }
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool SQLQuery::checkVoteExists(std::string user_id, std::string song_id)
+{
+    std::string checkcommand = "SELECT USERID FROM Votes WHERE USERID =" + user_id + " and SONGID=" + song_id + ";";
+
+    struct sqlite3_stmt *selectstmt;
+    rc = sqlite3_prepare_v2(db, checkcommand.c_str(), -1, &selectstmt, NULL);
+    
+    auto selected = sqlite3_step(selectstmt);
+    sqlite3_finalize(selectstmt);
+    
+    if(rc == SQLITE_OK)
+    {
+        if (selected == SQLITE_ROW)
+            {
+                return true; 
+            }
+        else 
+            { 
+                return false;
+            }
+    }
+    else
+    {
+        return false;
+    }
+}
+
 void SQLQuery::addUser(USRTYPE user_type, std::string name, std::string pass)
 {
     if(checkUserExists(USER, name) || checkUserExists(ADMIN, name))
@@ -129,10 +183,11 @@ void SQLQuery::loginUser(std::string name, std::string pass, userData &user)
         {
             user.type = usert;
             user.LOGGEDIN = true;
+            user.ID = (char*)sqlite3_column_text(selectstmt, 0);
             if(usert == USER)
                 setMessage(SQL_USRLOGINSUCCESS, "Login successful");
             else
-                setMessage(SQL_ADMINLOGINSUCCESS, "Login successful");
+                setMessage(SQL_ADMINLOGINSUCCESS, "Logged in as admin");
         } 
         else
         {
@@ -206,6 +261,47 @@ void SQLQuery::deleteSubmission(std::string submitted_id)
      
 }
 
+void SQLQuery::vote(std::string user_id, std::string song_id, std::string vote_value)
+{
+    if(vote_value!="up" && vote_value!="down")
+    {
+        setMessage(SQL_ERRGENERIC, "Invalid vote");
+        return;
+    }
+
+    if(checkSongIDExists(song_id))
+    {
+        if(checkVoteExists(user_id, song_id))
+        {
+            setMessage(SQL_ERRGENERIC, "Song already voted");
+            return;
+        }
+
+        std::string voteval;
+        if(vote_value=="up")
+            voteval="1";
+        else
+            voteval="-1";
+        std::string command = "INSERT INTO Votes (USERID, SONGID, Vote) VALUES (" + user_id + "," + song_id + "," + voteval + ");";
+    
+        int rc = sqlite3_exec(db, command.c_str(), callback, 0, &szErrMsg);
+        if(rc != SQLITE_OK)
+        {
+            printf("error: %s", sqlite3_errmsg(db));
+            setMessage(SQL_ERRGENERIC, "Error: Vote failed");
+        }
+        else
+        {
+            setMessage(SQL_VOTESUCCESS, "Vote registered");
+        }
+    }
+    else
+    {
+        setMessage(SQL_ERRGENERIC, "Invalid song ID");
+    }
+    
+}
+
 void SQLQuery::findTags(std::vector<std::string> &tags)
 {
     sqlite3_stmt *stmt;
@@ -228,7 +324,7 @@ void SQLQuery::findTags(std::vector<std::string> &tags)
     }
     else
     {
-        char result[500];
+        char result[2000];
         getQueryResult(stmt, result);
         setMessage(SQL_NULL, result);
     }

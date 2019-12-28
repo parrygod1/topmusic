@@ -20,6 +20,8 @@ class SQLQuery
     void setMessage(SQLMSG s, std::string msg);
     bool checkUserExists(USRTYPE user_type, std::string name);
     bool checkSongExists(std::string link);
+    bool checkSongIDExists(std::string song_id);
+    bool checkVoteExists(std::string user_id, std::string song_id);
     void getQueryResult(sqlite3_stmt *stmt, char result[]);
     static int callback(void *NotUsed, int argc, char **argv, char **azColName); //static cause of sqlite req
 
@@ -31,6 +33,7 @@ class SQLQuery
     void listSubmissions();
     void listAll();
     void findTags(std::vector<std::string> &tags);
+    void vote(std::string user_id, std::string song_id, std::string vote_value);
     void deleteSubmission(std::string submitted_id);
     std::string getMessage();
     void openDB();

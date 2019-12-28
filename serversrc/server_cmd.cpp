@@ -15,7 +15,7 @@ std::string ServerCmd::getCmdkey(std::string command)
     return std::string(p);
 }
 
-void ServerCmd::getCmdArgs(std::vector<std::string> &vector, std::string args, int count)
+void ServerCmd::getCmdArgs(std::vector<std::string> &vector, std::string args, int count=0)
 {
     if(args[0]==' ')
         args.erase(0,1);
@@ -26,7 +26,7 @@ void ServerCmd::getCmdArgs(std::vector<std::string> &vector, std::string args, i
     if(p)
         vector.push_back(std::string(p));
 
-    if(count!=COUNTLESS)
+    if(count>0)
     {
         for(count; count > 0; count--)
         {   
@@ -90,7 +90,7 @@ void ServerCmd::parseCommand(std::string command, userData &user)
     std::vector<std::string> args;
     args.clear();
 
-    //use return if we set any message in here otherwise it will be null
+    //use return if we set any message in here otherwise it will be the previous msg
     switch(map_cmdval[getCmdkey(command)])
     {
         case CMD_NULL:
@@ -166,7 +166,7 @@ void ServerCmd::parseCommand(std::string command, userData &user)
         break;
 
         case CMD_APPROVESONG:
-            if(user.type==ADMIN)
+            if(user.LOGGEDIN==true && user.type==ADMIN)
             {
                 getCmdArgs(args, command.substr(8, command.size()), 1);
                 query->approveSong(args[0]);
@@ -192,8 +192,30 @@ void ServerCmd::parseCommand(std::string command, userData &user)
         break;
 
         case CMD_FINDTAGS:
-            getCmdArgs(args, command.substr(8, command.size()), COUNTLESS);
-            query->findTags(args);
+            if(user.LOGGEDIN==true)
+            {
+                getCmdArgs(args, command.substr(8, command.size()));
+                query->findTags(args);
+            }
+            else
+            {
+               setMessage(SQL_ERRGENERIC, "Error: You need to be logged in to execute this command\n");
+               return;
+            }
+        break;
+
+        case CMD_VOTE:
+            if(user.LOGGEDIN==true)
+            {
+                getCmdArgs(args, command.substr(4, command.size()), 2);
+                query->vote(user.ID, args[0], args[1]);
+            }
+            else
+            {
+               setMessage(SQL_ERRGENERIC, "Error: You need to be logged in to execute this command\n");
+               return;
+            }
+            
         break;
 
         case CMD_LIST:

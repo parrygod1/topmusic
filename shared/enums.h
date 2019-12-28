@@ -13,6 +13,7 @@ struct userData
   bool CONNECTED;
   bool LOGGEDIN;
   USRTYPE type;
+  std::string ID;
 };
 
 enum SQLMSG 
@@ -25,6 +26,7 @@ enum SQLMSG
     SQL_SONGSUBMITSUCCESS = 105,
     SQL_SONGAPPROVESUCCESS = 106,
     SQL_DELETESUBMSUCCESS = 107,
+    SQL_VOTESUCCESS = 108,
     SQL_NULL = 999
 };
 
@@ -42,7 +44,8 @@ enum CMDVAL
     CMD_APPROVESONG,
     CMD_DELETESUBM,
     CMD_LIST,
-    CMD_FINDTAGS
+    CMD_FINDTAGS,
+    CMD_VOTE
 };
 
 static std::map<std::string, CMDVAL> map_cmdval;
@@ -63,6 +66,7 @@ inline void initCmdmap()
     map_cmdval["delsubm"] = CMD_DELETESUBM;
     map_cmdval["list"] = CMD_LIST;
     map_cmdval["findtags"] = CMD_FINDTAGS;
+    map_cmdval["vote"] = CMD_VOTE;
 }
 
 /*

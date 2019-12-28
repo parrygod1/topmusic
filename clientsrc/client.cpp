@@ -54,7 +54,6 @@ int main()
 
                 case SQL_ADMINLOGINSUCCESS:
                     LOGGEDIN = true;
-                    printf("-Logged in as admin-\n\n");
                 break;
 
                 case SQL_LOGOUTSUCCESS:

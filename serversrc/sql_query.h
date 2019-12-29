@@ -21,6 +21,7 @@ class SQLQuery
     bool checkUserExists(USRTYPE user_type, std::string name);
     bool checkSongExists(std::string link);
     bool checkSongIDExists(std::string song_id);
+    bool checkCommentExists(std::string user_id, std::string song_id);
     bool checkVoteExists(std::string user_id, std::string song_id);
     void getQueryResult(sqlite3_stmt *stmt, char result[]);
     void updateScores();
@@ -33,9 +34,13 @@ class SQLQuery
     void approveSong(std::string submitted_id);
     void listSubmissions();
     void listAll();
+    void listTop();
+    void listComments(std::string song_id);
     void findTags(std::vector<std::string> &tags);
-    void vote(std::string user_id, std::string song_id, std::string vote_value);
+    void addVote(std::string user_id, std::string song_id, std::string vote_value);
+    void addComment(std::string user_id, std::string song_id, std::string comment);
     void deleteSubmission(std::string submitted_id);
+    void deleteSong(std::string song_id);
     std::string getMessage();
     void openDB();
     void closeDB();

@@ -1,12 +1,6 @@
 #include "server_cmd.h"
 #include <string>
 #include <cstring>
-#include <thread>
-
-constexpr unsigned int str2int(const char* str, int h = 0)
-{
-    	return !str[h] ? 5381 : (str2int(str, h+1) * 33) ^ str[h];
-}
 
 std::string ServerCmd::getCmdkey(std::string command)
 {
@@ -103,7 +97,7 @@ void ServerCmd::parseCommand(std::string command, userData &user)
         break;
 
         case CMD_USERCONNECT:
-            this->msg = "";
+            setMessage(SV_CONNECTSUCCESS, "Connected to server");
             return;
         break;
 
@@ -178,10 +172,23 @@ void ServerCmd::parseCommand(std::string command, userData &user)
         break;
 
         case CMD_DELETESUBM:
-            if(user.type==ADMIN)
+            if(user.LOGGEDIN==true && user.type==ADMIN)
             {
                 getCmdArgs(args, command.substr(7, command.size()), 1);
                 query->deleteSubmission(args[0]);
+            }
+            else
+            {
+               setMessage(SQL_ERRGENERIC, "Error: Permission denied\n");
+               return;
+            }
+        break;
+        
+        case CMD_DELETESONG:
+            if(user.LOGGEDIN==true && user.type==ADMIN)
+            {
+                getCmdArgs(args, command.substr(10, command.size()), 1);
+                query->deleteSong(args[0]);
             }
             else
             {
@@ -196,6 +203,11 @@ void ServerCmd::parseCommand(std::string command, userData &user)
                 getCmdArgs(args, command.substr(8, command.size()));
                 query->findTags(args);
             }
+            else if(user.type==ADMIN)
+            {
+                setMessage(SQL_ERRGENERIC, "Error: Only normal users can vote\n");
+                return;
+            }
             else
             {
                setMessage(SQL_ERRGENERIC, "Error: You need to be logged in to execute this command\n");
@@ -207,7 +219,7 @@ void ServerCmd::parseCommand(std::string command, userData &user)
             if(user.LOGGEDIN==true)
             {
                 getCmdArgs(args, command.substr(4, command.size()), 2);
-                query->vote(user.ID, args[0], args[1]);
+                query->addVote(user.ID, args[0], args[1]);
             }
             else
             {
@@ -215,6 +227,33 @@ void ServerCmd::parseCommand(std::string command, userData &user)
                return;
             }
             
+        break;
+
+        case CMD_COMMENT:
+            if(user.LOGGEDIN==true)
+            {
+                getCmdStrings(args, command.substr(7, command.size()));
+                getCmdArgs(args, command.substr(7, command.size()), 1);
+                query->addComment(user.ID, args[1], args[0]);
+            }
+            else
+            {
+               setMessage(SQL_ERRGENERIC, "Error: You need to be logged in to execute this command\n");
+               return;
+            }
+        break;
+
+        case CMD_SHOWCOMMENTS:
+            if(user.LOGGEDIN==true)
+            {
+                getCmdArgs(args, command.substr(12, command.size()),1);
+                query->listComments(args[0]);
+            }
+            else
+            {
+               setMessage(SQL_ERRGENERIC, "Error: You need to be logged in to execute this command\n");
+               return;
+            }
         break;
 
         case CMD_LIST:
@@ -232,6 +271,16 @@ void ServerCmd::parseCommand(std::string command, userData &user)
             {
                 if(user.LOGGEDIN)
                     query->listAll();
+                else
+                {
+                    setMessage(SQL_ERRGENERIC, "Error: Not logged in\n");
+                    return;
+                }
+            }
+            else if(args[0]=="top")
+            {
+                if(user.LOGGEDIN)
+                    query->listTop();
                 else
                 {
                     setMessage(SQL_ERRGENERIC, "Error: Not logged in\n");

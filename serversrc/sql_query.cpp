@@ -111,6 +111,33 @@ bool SQLQuery::checkVoteExists(std::string user_id, std::string song_id)
     }
 }
 
+bool SQLQuery::checkCommentExists(std::string user_id, std::string song_id)
+{
+    std::string checkcommand = "SELECT USERID FROM Comments WHERE USERID =" + user_id + " and SONGID=" + song_id + ";";
+
+    struct sqlite3_stmt *selectstmt;
+    rc = sqlite3_prepare_v2(db, checkcommand.c_str(), -1, &selectstmt, NULL);
+    
+    auto selected = sqlite3_step(selectstmt);
+    sqlite3_finalize(selectstmt);
+    
+    if(rc == SQLITE_OK)
+    {
+        if (selected == SQLITE_ROW)
+            {
+                return true; 
+            }
+        else 
+            { 
+                return false;
+            }
+    }
+    else
+    {
+        return false;
+    }
+}
+
 void SQLQuery::addUser(USRTYPE user_type, std::string name, std::string pass)
 {
     if(checkUserExists(USER, name) || checkUserExists(ADMIN, name))
@@ -256,11 +283,24 @@ void SQLQuery::deleteSubmission(std::string submitted_id)
     else
     {
         setMessage(SQL_DELETESUBMSUCCESS, "Cleared submission\n");
-    }
-     
+    }  
 }
 
-void SQLQuery::vote(std::string user_id, std::string song_id, std::string vote_value)
+void SQLQuery::deleteSong(std::string song_id)
+{
+    std::string command = "DELETE FROM Songs WHERE ID=" + song_id + ";";
+    rc = sqlite3_exec(db, command.c_str(), callback, 0, &szErrMsg);
+    if(rc != SQLITE_OK)
+    {
+        setMessage(SQL_ERRGENERIC, "Warning: Failed to delete song ID=" + song_id);
+    } 
+    else
+    {
+        setMessage(SQL_DELETESUBMSUCCESS, "Deleted song\n");
+    }  
+}
+
+void SQLQuery::addVote(std::string user_id, std::string song_id, std::string vote_value)
 {
     if(vote_value!="up" && vote_value!="down")
     {
@@ -292,6 +332,43 @@ void SQLQuery::vote(std::string user_id, std::string song_id, std::string vote_v
         else
         {
             setMessage(SQL_VOTESUCCESS, "Vote registered");
+            updateScores();
+        }
+    }
+    else
+    {
+        setMessage(SQL_ERRGENERIC, "Invalid song ID");
+    }
+    
+}
+
+void SQLQuery::addComment(std::string user_id, std::string song_id, std::string comment)
+{
+    if(comment.size()<1)
+    {
+        setMessage(SQL_ERRGENERIC, "Error: Comment is empty");
+        return;
+    }
+
+    if(checkSongIDExists(song_id))
+    {
+        if(checkCommentExists(user_id, song_id))
+        {
+            setMessage(SQL_ERRGENERIC, "You already commented on this song");
+            return;
+        }
+
+        std::string command = "INSERT INTO Comments (USERID, SONGID, Comment) VALUES (" + user_id + "," + song_id + ",\'" + comment + "\');";
+    
+        int rc = sqlite3_exec(db, command.c_str(), callback, 0, &szErrMsg);
+        if(rc != SQLITE_OK)
+        {
+            printf("error: %s", sqlite3_errmsg(db));
+            setMessage(SQL_ERRGENERIC, "Error: Comment failed");
+        }
+        else
+        {
+            setMessage(SQL_VOTESUCCESS, "Comment registered");
             updateScores();
         }
     }
@@ -365,6 +442,46 @@ void SQLQuery::listAll()
     else
     {
         char result[MSG_BUFSIZE];
+        getQueryResult(stmt, result);
+        setMessage(SQL_NULL, result);
+    }
+    sqlite3_finalize(stmt);
+}
+
+void SQLQuery::listTop()
+{
+    sqlite3_stmt *stmt;
+    char command[] = "SELECT * FROM Songs ORDER BY Score DESC LIMIT 5;";
+    
+    int rc = sqlite3_prepare_v2(db, command, -1, &stmt, NULL);
+    if(rc != SQLITE_OK)
+    {
+        printf("error: %s", sqlite3_errmsg(db));
+        setMessage(SQL_ERRGENERIC, "Error: List failed");
+    }
+    else
+    {
+        char result[MSG_BUFSIZE];
+        getQueryResult(stmt, result);
+        setMessage(SQL_NULL, result);
+    }
+    sqlite3_finalize(stmt);
+}
+
+void SQLQuery::listComments(std::string song_id)
+{
+    sqlite3_stmt *stmt;
+    std::string command = "select u.username, c.Comment from Users u join Comments c on c.SONGID=" + song_id + " and u.ID=c.USERID;";
+
+    int rc = sqlite3_prepare_v2(db, command.c_str(), -1, &stmt, NULL);
+    if(rc != SQLITE_OK)
+    {
+        printf("error: %s", sqlite3_errmsg(db));
+        setMessage(SQL_ERRGENERIC, "Error: Song has no comments");
+    }
+    else
+    {
+        char result[2000];
         getQueryResult(stmt, result);
         setMessage(SQL_NULL, result);
     }

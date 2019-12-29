@@ -4,7 +4,7 @@
 //#include "UI_component.h"
 using namespace std;
 
-#define PORT 1234
+#define PORT 5005
 
 bool CONNECTED = false;
 bool LOGGEDIN = false;
@@ -34,8 +34,8 @@ int main()
     else
         {
             printf("Connected to server\n");
-            //server_component.sendMsgToServer(socket_descriptor, "login test asdf");
-            //server_component.recieveMsgFromServer(socket_descriptor);
+            server_component.sendMsgToServer(socket_descriptor, "login root root");//remove these 2 lines
+            server_component.recieveMsgFromServer(socket_descriptor);
         }
     
     char buf[MSG_BUFSIZE];

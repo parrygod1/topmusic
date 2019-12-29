@@ -10,7 +10,6 @@
 #include <pthread.h>
 #include "server_cmd.h"
 
-#define PORT 1234
 #define MAXERRORS 5
 
 typedef struct thData{

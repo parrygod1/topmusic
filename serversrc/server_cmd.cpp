@@ -256,6 +256,32 @@ void ServerCmd::parseCommand(std::string command, userData &user)
             }
         break;
 
+        case CMD_GETUSRINFO:
+            if(user.LOGGEDIN==true)
+            {
+                getCmdArgs(args, command.substr(4, command.size()), 1);
+                query->listUserInfo(args[0]);
+            }
+            else
+            {
+               setMessage(SQL_ERRGENERIC, "Error: You need to be logged in to execute this command\n");
+               return;
+            }
+        break;
+
+        case CMD_SETREP:
+            if(user.LOGGEDIN==true && user.type==ADMIN)
+            {
+                getCmdArgs(args, command.substr(6, command.size()), 2);
+                query->setReputation(args[0], args[1]);
+            }
+            else
+            {
+               setMessage(SQL_ERRGENERIC, "Error: Permission denied\n");
+               return;
+            }
+        break;
+
         case CMD_LIST:
             getCmdArgs(args, command.substr(4, command.size()), 1);
             if(args[0]=="subm")
@@ -285,8 +311,7 @@ void ServerCmd::parseCommand(std::string command, userData &user)
                 {
                     setMessage(SQL_ERRGENERIC, "Error: Not logged in\n");
                     return;
-                }
-                
+                }  
             }
             else
             {

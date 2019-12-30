@@ -111,6 +111,33 @@ bool SQLQuery::checkVoteExists(std::string user_id, std::string song_id)
     }
 }
 
+bool SQLQuery::checkUserSuspended(std::string user_id)
+{
+    std::string checkcommand = "SELECT ID FROM Users WHERE ID =" + user_id + " and Reputation=1;";
+
+    struct sqlite3_stmt *selectstmt;
+    rc = sqlite3_prepare_v2(db, checkcommand.c_str(), -1, &selectstmt, NULL);
+    
+    auto selected = sqlite3_step(selectstmt);
+    sqlite3_finalize(selectstmt);
+    
+    if(rc == SQLITE_OK)
+    {
+        if (selected == SQLITE_ROW)
+            {
+                return true; 
+            }
+        else 
+            { 
+                return false;
+            }
+    }
+    else
+    {
+        return false;
+    }
+}
+
 bool SQLQuery::checkCommentExists(std::string user_id, std::string song_id)
 {
     std::string checkcommand = "SELECT USERID FROM Comments WHERE USERID =" + user_id + " and SONGID=" + song_id + ";";
@@ -307,38 +334,45 @@ void SQLQuery::addVote(std::string user_id, std::string song_id, std::string vot
         setMessage(SQL_ERRGENERIC, "Invalid vote");
         return;
     }
-
-    if(checkSongIDExists(song_id))
+    if(checkUserSuspended(user_id)==false)
     {
-        if(checkVoteExists(user_id, song_id))
+        if(checkSongIDExists(song_id))
         {
-            setMessage(SQL_ERRGENERIC, "Song already voted");
-            return;
-        }
+            if(checkVoteExists(user_id, song_id))
+            {
+                setMessage(SQL_ERRGENERIC, "Song already voted");
+                return;
+            }
 
-        std::string voteval;
-        if(vote_value=="up")
-            voteval="1";
-        else
-            voteval="-1";
-        std::string command = "INSERT INTO Votes (USERID, SONGID, Vote) VALUES (" + user_id + "," + song_id + "," + voteval + ");";
-    
-        int rc = sqlite3_exec(db, command.c_str(), callback, 0, &szErrMsg);
-        if(rc != SQLITE_OK)
-        {
-            printf("error: %s", sqlite3_errmsg(db));
-            setMessage(SQL_ERRGENERIC, "Error: Vote failed");
+            std::string voteval;
+            if(vote_value=="up")
+                voteval="1";
+            else
+                voteval="-1";
+            std::string command = "INSERT INTO Votes (USERID, SONGID, Vote) VALUES (" + user_id + "," + song_id + "," + voteval + ");";
+
+            int rc = sqlite3_exec(db, command.c_str(), callback, 0, &szErrMsg);
+            if(rc != SQLITE_OK)
+            {
+                printf("error: %s", sqlite3_errmsg(db));
+                setMessage(SQL_ERRGENERIC, "Error: Vote failed");
+            }
+            else
+            {
+                setMessage(SQL_VOTESUCCESS, "Vote registered");
+                updateScores();
+            }
         }
         else
         {
-            setMessage(SQL_VOTESUCCESS, "Vote registered");
-            updateScores();
+            setMessage(SQL_ERRGENERIC, "Invalid song ID");
         }
     }
     else
     {
-        setMessage(SQL_ERRGENERIC, "Invalid song ID");
+        setMessage(SQL_ERRGENERIC, "Error: This user is suspended from voting");
     }
+    
     
 }
 
@@ -391,7 +425,7 @@ void SQLQuery::findTags(std::vector<std::string> &tags)
             command += " or ";
         command += "Tags like (\'%" + tags[i] + "%\')";
     }
-    command += ";";
+    command += "ORDER BY Score LIMIT 5;";
 
     int rc = sqlite3_prepare_v2(db, command.c_str(), -1, &stmt, NULL);
     if(rc != SQLITE_OK)
@@ -408,10 +442,33 @@ void SQLQuery::findTags(std::vector<std::string> &tags)
     sqlite3_finalize(stmt);
 }
 
+void SQLQuery::setReputation(std::string name, std::string rep_value)
+{//set reputation for a user 0=neutral 1=vote suspended 2=banned 
+    if(checkUserExists(USER, name))
+    {
+        std::string command = "UPDATE Users SET Reputation=" + rep_value + " WHERE username=\'" + name +"\';";
+
+        int rc = sqlite3_exec(db, command.c_str(), callback, 0, &szErrMsg);
+        if(rc != SQLITE_OK)
+        {
+            printf("SQLerror:%s\n", sqlite3_errmsg(db));
+            setMessage(SQL_ERRGENERIC, "Error: Could not set reputation, check rep value (0 normal, 1 suspended, 2 banned)");
+        }
+        else
+        {
+            setMessage(SQL_SETREPSUCCESS, "Changed user reputation"); 
+        }
+    }
+    else
+    {
+        setMessage(SQL_ERRGENERIC, "Error: Could not find user");
+    }
+}
+
 void SQLQuery::listSubmissions()
 {
     sqlite3_stmt *stmt;
-    char command[] = "SELECT * FROM Submitted_Songs;";
+    char command[] = "SELECT * FROM Submitted_Songs LIMIT 5;";
     
     int rc = sqlite3_prepare_v2(db, command, -1, &stmt, NULL);
     if(rc != SQLITE_OK)
@@ -486,6 +543,34 @@ void SQLQuery::listComments(std::string song_id)
         setMessage(SQL_NULL, result);
     }
     sqlite3_finalize(stmt);
+}
+
+void SQLQuery::listUserInfo(std::string username)
+{
+    if(checkUserExists(USER, username))
+    {
+        sqlite3_stmt *stmt;
+        std::string command = "SELECT ID, username, Reputation FROM Users where username=\'" + username + "\';";
+
+        int rc = sqlite3_prepare_v2(db, command.c_str(), -1, &stmt, NULL);
+        if(rc != SQLITE_OK)
+        {
+            printf("error: %s", sqlite3_errmsg(db));
+            setMessage(SQL_ERRGENERIC, "Error: Could not list information for user");
+        }
+        else
+        {
+            char result[MSG_BUFSIZE];
+            getQueryResult(stmt, result);
+            setMessage(SQL_NULL, result);
+        }
+        sqlite3_finalize(stmt);
+    }
+    else
+    {
+        setMessage(SQL_ERRGENERIC, "Error: Could not find user");
+    }
+    
 }
 
 void SQLQuery::updateScores()

@@ -29,6 +29,7 @@ enum SQLMSG
     SQL_DELETESUBMSUCCESS = 107,
     SQL_VOTESUCCESS = 108,
     SV_CONNECTSUCCESS = 109,
+    SQL_SETREPSUCCESS = 110,
     SQL_NULL = 999
 };
 
@@ -50,7 +51,9 @@ enum CMDVAL
     CMD_VOTE,
     CMD_COMMENT,
     CMD_SHOWCOMMENTS,
-    CMD_DELETESONG
+    CMD_DELETESONG,
+    CMD_SETREP,
+    CMD_GETUSRINFO
 };
 
 static std::map<std::string, CMDVAL> map_cmdval;
@@ -74,6 +77,8 @@ inline void initCmdmap()
     map_cmdval["comment"] = CMD_COMMENT;
     map_cmdval["showcomments"] = CMD_SHOWCOMMENTS;
     map_cmdval["deletesong"] = CMD_DELETESONG;
+    map_cmdval["info"] = CMD_GETUSRINFO;
+    map_cmdval["setrep"] = CMD_SETREP; //set reputation for a user 0=neutral 1=vote suspended 2=banned 
 }
 
 /*

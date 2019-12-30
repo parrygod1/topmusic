@@ -23,6 +23,7 @@ class SQLQuery
     bool checkSongIDExists(std::string song_id);
     bool checkCommentExists(std::string user_id, std::string song_id);
     bool checkVoteExists(std::string user_id, std::string song_id);
+    bool checkUserSuspended(std::string user_id);
     void getQueryResult(sqlite3_stmt *stmt, char result[]);
     void updateScores();
     static int callback(void *NotUsed, int argc, char **argv, char **azColName); //static cause of sqlite req
@@ -35,6 +36,8 @@ class SQLQuery
     void listSubmissions();
     void listAll();
     void listTop();
+    void listUserInfo(std::string username);
+    void setReputation(std::string name, std::string rep_value);
     void listComments(std::string song_id);
     void findTags(std::vector<std::string> &tags);
     void addVote(std::string user_id, std::string song_id, std::string vote_value);

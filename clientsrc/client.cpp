@@ -9,7 +9,7 @@ using namespace std;
 bool CONNECTED = false;
 bool LOGGEDIN = false;
 bool RUNNING = true;
-char SERVERIP[] = "10.0.2.15";
+char SERVERIP[] = "172.25.1.4";
 
 serverconnect_Component server_component;
 //UIComponent *user_interface;

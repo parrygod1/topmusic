@@ -1,0 +1,26 @@
+======DO NOT DELETE THIS FILE======
+How to use:
+help --- Show this command list
+
+exit --- Exit the application
+conn <IP> <PORT> --- Connect to server
+disconn --- Disconnect from server
+stopsv --- Stop the server (admin only)
+login <username> <password> --- Login 
+logout --- Logout from an account
+
+reg <username> <password> --- Register an account
+areg <username> <password> --- Register an admin account
+
+submsong "Title..." "Description..." "tag1, tag2" "link.com" --- Submit a song to be reviewed by an admin, quote marks are important
+findtags <tag1> <tag2> ... <tagN> --- Find top songs that have the specified tags
+vote <ID> <up|down> --- Vote a song, up will increment the score, down will decrease it
+comment <ID> "Comment here..." --- Comment on a song, qutation marks are important
+showcomments <ID> --- Show comments for a song with the specified ID
+info <username> --- Display information about an user
+list <top|all|subm> --- List the specified argument, top = top 5 songs, all = all songs, subm = submitted songs (admin only)
+
+appvsong <ID> --- Approve a song from the submission list (admin only)
+delsubm <ID> --- Delete a submission (admin only)
+delsong <ID> --- Delete a song from the top (admin only)
+setrep <username> <0|1|2> --- Set a user's reputation 0=neutral 1=votesuspended (admin only)

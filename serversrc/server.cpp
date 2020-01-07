@@ -14,19 +14,21 @@
 
 typedef struct thData{
 	int idThread; 
-	int cl; //descriptorul intors de accept
+	int cl; 
 }thData;
 
-struct sockaddr_in server;	// structura folosita de server
+struct sockaddr_in server;
 struct sockaddr_in from;	
-int sd;		//descriptorul de socket 
+int sd;		 
 int pid;
-pthread_t th[100];    //Identificatorii thread-urilor care se vor crea
+pthread_t th[100];   
 int i=0;
+
 ServerCmd *server_cmd;
+bool RUNNING = true;
+int PORT = 5005;
 
-
-static void *treat(void *); /* functia executata de fiecare thread ce realizeaza comunicarea cu clientii */
+static void *treat(void *);
 void raspunde(void *);
 int startListen();
 void acceptClients();
@@ -34,8 +36,11 @@ bool readClient(void *arg, char cmd[]);
 void executeCommand(char *cmd, userData &user);
 bool sendClient(void *arg, char msg[]);
 
-int main()
+int main(int argc, char **argv)
 {
+    if(argc>1)
+      PORT = atoi(argv[1]);
+
     server_cmd = new ServerCmd();
 
     startListen();
@@ -59,7 +64,7 @@ static void *treat(void * arg)
 
     char command[MSG_BUFSIZE];
   
-    while(user.CONNECTED)
+    while(user.CONNECTED && RUNNING)
     {
       if(errorcount > MAXERRORS)
       {
@@ -81,6 +86,12 @@ static void *treat(void * arg)
           user.LOGGEDIN = false;
           sendClient((struct thData*)arg, "999:Connection closed");
       }
+      else if(strcmp(command, "stopsv")==0 && user.type==ADMIN)
+      {
+        RUNNING=false;
+        user.CONNECTED = false;
+        user.LOGGEDIN = false;
+      }
       else if(strlen(command)>0)
       {
           executeCommand(command, user);
@@ -89,6 +100,9 @@ static void *treat(void * arg)
       }
     }
 		/* am terminat cu acest client, inchidem conexiunea */
+    if(RUNNING==false)
+      sendClient((struct thData*)arg, "111:Server closing...");
+
 		close ((intptr_t)arg);
     pthread_detach(pthread_self());
 		return(NULL);	

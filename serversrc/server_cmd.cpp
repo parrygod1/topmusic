@@ -1,82 +1,7 @@
 #include "server_cmd.h"
+#include "../shared/parse_func.h"
 #include <string>
 #include <cstring>
-
-std::string ServerCmd::getCmdkey(std::string command)
-{
-    char *p = strtok(&command[0], " ");
-    return std::string(p);
-}
-
-void ServerCmd::getCmdArgs(std::vector<std::string> &vector, std::string args, int count=0)
-{
-    if(args[0]==' ')
-        args.erase(0,1);
-
-    char *c_args = new char[args.size()];
-    strcpy(c_args, args.c_str());
-    char *p = strtok(c_args, " ");
-    if(p)
-        vector.push_back(std::string(p));
-
-    if(count>0)
-    {
-        for(count; count > 0; count--)
-        {   
-            p = strtok (NULL, " ");
-            if(p)   
-            {   
-                vector.push_back(std::string(p));
-            } 
-            else
-            {
-                vector.push_back(std::string(""));
-            }  
-        }
-    }
-    else
-    {
-        while(p)
-        {
-            p = strtok (NULL, " ");
-            if(p)   
-            {   
-                vector.push_back(std::string(p));
-            }
-        }
-    }
-    
-}
-
-void ServerCmd::getCmdStrings(std::vector<std::string> &vector, std::string args)
-{
-    if(args[0]==' ')
-        args.erase(0,1);
-    
-    std::string temp;
-    bool reading_chars = false;
-    for(int i=0; i < args.size(); i++)
-    {
-        if((args[i]==' ' && args[i+1]=='\"') || (i==0 && args[i]=='\"'))
-        {
-            if(i!=0)
-                i++;
-            reading_chars = true;
-            temp = "";
-            continue;
-        }
-        if(reading_chars)
-        {
-            if(args[i]=='\"' && (args[i+1]==' ' || args[i+1] == '\0'))
-            {
-                reading_chars = false;
-                vector.push_back(temp);
-                continue;
-            }
-            temp+=args[i];
-        }
-    }
-}
 
 void ServerCmd::parseCommand(std::string command, userData &user)
 {   
@@ -91,8 +16,18 @@ void ServerCmd::parseCommand(std::string command, userData &user)
             return;
         break;
 
+        case CMD_HELP:
+            this->msg = "...";
+            return;
+        break;
+
         case CMD_USEREXIT:
-            this->msg = "";
+            this->msg = "...";
+            return;
+        break;
+
+        case CMD_STOPSV:
+            this->msg = "...";
             return;
         break;
 
@@ -135,8 +70,14 @@ void ServerCmd::parseCommand(std::string command, userData &user)
         break;
 
         case CMD_ADMINREG:
-            getCmdArgs(args, command.substr(4, command.size()), 2);
-            query->addUser(ADMIN, args[0], args[1]);
+            getCmdArgs(args, command.substr(4, command.size()), 3);
+            if(args[2]==ADMINKEY)
+                query->addUser(ADMIN, args[0], args[1]);
+            else
+                {
+                    setMessage(SQL_ERRGENERIC, "Invalid admin key");
+                    return;
+                }
         break;
 
         case CMD_SUBMITSONG:

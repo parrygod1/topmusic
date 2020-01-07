@@ -40,7 +40,7 @@
                 "${workspaceFolder}/client",
                 "-I/usr/include",
                 "-lsqlite3",
-                "-lpthread",   
+                "-lpthread", 
                 "-export-dynamic"
             ],
             "options": {

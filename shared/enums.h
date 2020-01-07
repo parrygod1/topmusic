@@ -2,15 +2,15 @@
 #define SHAREDENUMS_H
 #include <map>
 
-#define PORT 5005
 #define MSG_BUFSIZE 5000
 #define MSG_STATLEN 4
+
+#define ADMINKEY "adkey12345"
 
 enum USRTYPE {USER, ADMIN};
 
 struct userData
 {
-  char *ip;
   bool CONNECTED;
   bool LOGGEDIN;
   USRTYPE type;
@@ -30,6 +30,7 @@ enum SQLMSG
     SQL_VOTESUCCESS = 108,
     SV_CONNECTSUCCESS = 109,
     SQL_SETREPSUCCESS = 110,
+    SV_FORCECLOSE = 111,
     SQL_NULL = 999
 };
 
@@ -53,14 +54,18 @@ enum CMDVAL
     CMD_SHOWCOMMENTS,
     CMD_DELETESONG,
     CMD_SETREP,
-    CMD_GETUSRINFO
+    CMD_GETUSRINFO,
+    CMD_HELP,
+    CMD_STOPSV
 };
 
 static std::map<std::string, CMDVAL> map_cmdval;
 
 inline void initCmdmap()
 {
-    map_cmdval[""] = CMD_NULL; 
+    map_cmdval[""] = CMD_NULL;
+    map_cmdval["help"] = CMD_HELP;
+    map_cmdval["stopsv"] = CMD_STOPSV;
     map_cmdval["exit"] = CMD_USEREXIT;
     map_cmdval["conn"] = CMD_USERCONNECT;
     map_cmdval["disconn"] = CMD_USERDISCONNECT;
@@ -78,12 +83,7 @@ inline void initCmdmap()
     map_cmdval["showcomments"] = CMD_SHOWCOMMENTS;
     map_cmdval["deletesong"] = CMD_DELETESONG;
     map_cmdval["info"] = CMD_GETUSRINFO;
-    map_cmdval["setrep"] = CMD_SETREP; //set reputation for a user 0=neutral 1=vote suspended 2=banned 
+    map_cmdval["setrep"] = CMD_SETREP; //set reputation for a user 0=neutral 1=vote suspended
 }
-
-/*
-How to use:
-
-*/
 
 #endif

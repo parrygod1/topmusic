@@ -1,43 +1,26 @@
 #include <iostream>
 #include <sqlite3.h>
 #include "serverconnect_component.h"
+#include "../shared/parse_func.h"
+
 //#include "UI_component.h"
 using namespace std;
-
-#define PORT 5005
 
 bool CONNECTED = false;
 bool LOGGEDIN = false;
 bool RUNNING = true;
-char SERVERIP[] = "172.25.1.4";
+char helpstring[2000];
 
 serverconnect_Component server_component;
 //UIComponent *user_interface;
 
+void openHelpFile();
+
 int main()
 {
-    /*
-        user_interface = new UIComponent();
-
-        while(user_interface->ui_current_state!=UI_EXIT)
-        {
-            user_interface->getInput();
-
-            user_interface->printMenu();
-        }
-    */
     int socket_descriptor;  
     initCmdmap();
-    CONNECTED = server_component.connectToServer(SERVERIP, PORT, socket_descriptor);
-    if(CONNECTED==false)
-        close(socket_descriptor);
-    else
-        {
-            printf("Connected to server\n");
-            server_component.sendMsgToServer(socket_descriptor, "login root root");//remove these 2 lines
-            server_component.recieveMsgFromServer(socket_descriptor);
-        }
-    
+    openHelpFile();
     char buf[MSG_BUFSIZE];
 
     while(RUNNING)
@@ -64,14 +47,25 @@ int main()
                     LOGGEDIN = false;
                 break;
 
+                case SV_FORCECLOSE:
+                    CONNECTED = false;
+                    LOGGEDIN = false;
+                    printf("Disconnected from server\n");
+                break;
+
                 default: 
                 break;
             }
         }
 
-        switch(map_cmdval[buf])
+        switch(map_cmdval[getCmdkey(buf)])
         {
             case CMD_NULL:
+            break;
+            
+            case CMD_HELP:
+                printf("\x1b[H\x1b[J"); //clear screen
+                printf("%s\n", helpstring);
             break;
 
             case CMD_USEREXIT:
@@ -83,10 +77,15 @@ int main()
             case CMD_USERCONNECT:
                 if(CONNECTED==false)
                     {
-                        CONNECTED = server_component.connectToServer(SERVERIP, PORT, socket_descriptor);
+                        std::string cmd(buf+5);
+                        std::vector<std::string> args;
+                        getCmdArgs(args, cmd, 2);
+                        CONNECTED = server_component.connectToServer((char*)args[0].c_str(), atoi(args[1].c_str()), socket_descriptor);
                         if(CONNECTED==false)
-                            close(socket_descriptor);
-                    }
+                                close(socket_descriptor);
+                            else 
+                                printf("Connected to server\n");
+                    }   
                 else 
                     printf("Already connected\n");
             break;
@@ -94,6 +93,7 @@ int main()
             case CMD_USERDISCONNECT:
                 CONNECTED = false;
                 close(socket_descriptor);
+                printf("Disconnected from server\n");
             break;
 
             default:
@@ -106,4 +106,29 @@ int main()
             server_component.sendMsgToServer(socket_descriptor, "exit");
             close(socket_descriptor);
         }
+}
+
+void openHelpFile()
+{
+    char file_name[]="help.txt";
+    char buffer[100];
+    FILE *fp; 
+
+    memset(helpstring, '\0', 2000);
+    fp = fopen(file_name, "r");
+
+    if (fp == NULL)
+    {
+       perror("Error while opening help file\n");
+       strcpy(helpstring, "Could not display help, make sure 'help.txt' is in the same folder");
+       return;
+    }
+    fgets(buffer, 100, fp);
+    while(fgets(buffer, 100, fp))
+    {
+        strcat(helpstring, buffer);
+    }
+    fclose(fp);
+    printf("\x1b[H\x1b[J");
+    printf("Type 'help' for a list of commands\n");
 }

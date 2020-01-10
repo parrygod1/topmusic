@@ -48,7 +48,7 @@ După acceptarea unui client, serverul va creea un thread separat pentru acesta,
 \section{Arhitectură}
 \hspace{4mm}Aplicația server și cea client folosesc o librărie comună "enums.h" pentru a identifica și executa comenzile definite. După realizarea conexiunii, serverul va creea un thread separat pentru client care va permite transmiterea și receptarea mesajelor. Odată ce o comandă a fost identificată, va fi executată funcția dedicată acelei comenzi pentru accesul sau scrierea în baza de date. La finalizarea operației, va fi transmis clientului un mesaj specific în funcție de succesul sau eșecul comenzii SQL.
 	
-Baza de date conține 6 tabele care conțin informații despre utilizatori, administratori, melodii, cereri pentru adăugarea melodiilor, comentarii și voturi. Pe lângă acestea, tabela $sqlite\_sequence$ conține cele mai mari valori din cheile primare pentru a le incrementa automat. În baza de date $topmusic.db$ din arhivă, sunt introduse câteva date pentru testarea aplicației. 
+Baza de date conține 6 tabele care conțin informații despre utilizatori, administratori, melodii, cereri pentru adăugarea melodiilor, comentarii și voturi. Pe lângă acestea, tabela $sqlite\_sequence$ conține cele mai mari valori din cheile primare pentru a le incrementa automat. În baza de date $topmusic.db$ din arhivă, sunt introduse câteva date pentru testarea aplicației. Pentru vizualizarea datelor poate fi folosită aplicația $sqlitebrowser$.
 
 \pagebreak
 \includegraphics[width=\textwidth]{overview}
@@ -96,7 +96,7 @@ switch(map_cmdval[getCmdkey(command)])
 În aplicația client, utilizatorul trebuie să introducă comanda $conn\ IP\ PORT$ pentru a se conecta la server. Odată conectat, poate înregistra un nou cont folosind comanda $reg\ username\ password$ sau se poate loga cu $login\ username\ password$. După logare, va fi determinat automat dacă contul este administrator sau utilizator normal, iar următoarele comenzi vor putea fi folosite: 
 \begin{itemize}
 \item $submsong\ "Title..."\ "Description..."\  "tag1, tag2"\  "link.com"$ - Trimite o cerere cu o melodie pentru a fi adăugată. Aceasta va fi verificată de administratori iar apoi aprobată sau ștearsă
-\item $findtags\ tag1\ tag2\ ...\ tagN$ - Gasește melodiile care conțin tag-urile specificate
+\item $findtags\ tag1\ tag2\ ...\ tagN$ - Gasește topul melodiilor care conțin tag-urile specificate
 \item $vote\ ID\ up|down$ - Votează o melodie. Voturile "up" vor adăuga un punct la scor iar "down" vor scădea. Scorul este calculat și actualizat automat după fiecare vot. Utilizatorii cu valoarea 1 în câmpul $Reputation$ din baza de date nu pot vota.
 \item $comment\ ID\ "Comment\ here..."$ - Adaugă un comentariu la o melodie
 \item $showcomments\ ID$ - Afișează comentariile unei melodii
@@ -222,11 +222,13 @@ void ServerCmd::getCmdStrings(std::vector<std::string> &vector, std::string args
 \pagebreak
 \textbf{Alte detalii:}
 
-Un cont de administrator poate fi înregistrat doar folosind comanda \linebreak $areg\ username\ password\ adminkey$, cheia admin fiind definită în $enums.h$\linebreak(valoarea prestabilită este "adkey12345").
+Clasa $ServerCmd$ folosește un switch pentru ramurile de execuție ale comenzilor și preia mesajele din $SQLQuery$ pentru a le transmite clientului. De asemenea apelează constructorul și destructorul din $SQLQuery$ pentru a deschide, respectiv închide legătura cu baza de date.
+
+Un cont de administrator poate fi înregistrat folosind comanda \linebreak $areg\ username\ password\ adminkey$, cheia admin fiind definită în $enums.h$\linebreak(valoarea prestabilită este "adkey12345"). Lista comenzilor poate fi consultată și în fișierul $help.txt$ din arhivă. Fără acest fișier, aplicația client nu va putea afișa detaliile din comanda $help$.
 
 Serverul poate fi executat cu un argument de tip int pentru a seta portul, altfel valoarea acestuia va fi 5005.
 
-Lista comenzilor poate fi consultată și în fișierul $help.txt$ din arhivă. Fără acest fișier, aplicația client nu va putea afișa detaliile din comanda $help$.
+Odată ce utilizatorii au comentat sau votat o melodie, nu vor mai putea repeta acțiunea pentru acea melodie.
 
 \section{Concluzii}
 \hspace{4mm} Aplicația client ar putea beneficia de mai multe funcționalități pe baza mesajelor de succes/eșec (interfață text sau grafică). 
@@ -243,8 +245,6 @@ https://profs.info.uaic.ro/\textasciitilde computernetworks/
 \linebreak
 https://profs.info.uaic.ro/\textasciitilde bd/wiki/index.php/Pagina\_principală
 \linebreak
-https://www.overleaf.com/learn
-\linebreak
 https://stackoverflow.com/questions/tagged/c
 \linebreak
 https://stackoverflow.com/questions/tagged/c++
@@ -256,6 +256,8 @@ https://en.cppreference.com/w/cpp
 https://en.cppreference.com/w/c
 \linebreak
 https://sourcemaking.com/
+\linebreak
+https://github.com/sqlitebrowser/sqlitebrowser/wiki
 \linebreak
 
 \subsection{Cărți}

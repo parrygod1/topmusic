@@ -10,7 +10,7 @@ login <username> <password> --- Login
 logout --- Logout from an account
 
 reg <username> <password> --- Register an account
-areg <username> <password> --- Register an admin account
+areg <username> <password> <key> --- Register an admin account
 
 submsong "Title..." "Description..." "tag1, tag2" "link.com" --- Submit a song to be reviewed by an admin, quote marks are important
 findtags <tag1> <tag2> ... <tagN> --- Find top songs that have the specified tags
@@ -23,4 +23,4 @@ list <top|all|subm> --- List the specified argument, top = top 5 songs, all = al
 appvsong <ID> --- Approve a song from the submission list (admin only)
 delsubm <ID> --- Delete a submission (admin only)
 delsong <ID> --- Delete a song from the top (admin only)
-setrep <username> <0|1|2> --- Set a user's reputation 0=neutral 1=votesuspended (admin only)
+setrep <username> <0|1> --- Set a user's reputation 0=neutral 1=votesuspended (admin only)

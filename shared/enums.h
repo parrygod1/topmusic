@@ -81,7 +81,7 @@ inline void initCmdmap()
     map_cmdval["vote"] = CMD_VOTE;
     map_cmdval["comment"] = CMD_COMMENT;
     map_cmdval["showcomments"] = CMD_SHOWCOMMENTS;
-    map_cmdval["deletesong"] = CMD_DELETESONG;
+    map_cmdval["delsong"] = CMD_DELETESONG;
     map_cmdval["info"] = CMD_GETUSRINFO;
     map_cmdval["setrep"] = CMD_SETREP; //set reputation for a user 0=neutral 1=vote suspended
 }

@@ -96,7 +96,6 @@ void ServerCmd::parseCommand(std::string command, userData &user)
                setMessage(SQL_ERRGENERIC, "Error: You need to be logged in to execute this command\n");
                return;
             }
-            
         break;
 
         case CMD_APPROVESONG:

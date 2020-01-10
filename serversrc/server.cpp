@@ -29,7 +29,6 @@ bool RUNNING = true;
 int PORT = 5005;
 
 static void *treat(void *);
-void raspunde(void *);
 int startListen();
 void acceptClients();
 bool readClient(void *arg, char cmd[]);
@@ -80,6 +79,9 @@ static void *treat(void * arg)
       if(!readClient((struct thData*)arg, command))
           errorcount++;
 
+      if(RUNNING==false)
+        break;
+
       if(strcmp(command, "disconn")==0 || strcmp(command, "exit")==0)
       {
           user.CONNECTED = false;
@@ -99,7 +101,7 @@ static void *treat(void * arg)
             errorcount++;
       }
     }
-		/* am terminat cu acest client, inchidem conexiunea */
+
     if(RUNNING==false)
       sendClient((struct thData*)arg, "111:Server closing...");
 
@@ -140,16 +142,16 @@ bool sendClient(void *arg, char msg[])
       fread(&msg, 1, ftell(stdout), stdout);
     }
 
-	  printf("[Thread %d]Trimitem mesajul inapoi... %s\n", tdL.idThread, msg);
+	  printf("[Thread %d]MSG: %s\n", tdL.idThread, msg);
 		    	      
 	  if (write (tdL.cl, msg, MSG_BUFSIZE) <= 0)
 		{
 		  printf("[Thread %d] ",tdL.idThread);
-		  perror ("[Thread]Eroare la write() catre client.\n");
+		  perror ("[Thread]Error writing to client\n");
       return 0;
 		}
   	else
-		  printf ("[Thread %d]Mesajul a fost trasmis cu succes.\n",tdL.idThread);	
+		  printf ("[Thread %d]Message sent successfully\n",tdL.idThread);	
 
     return 1;
 }
@@ -158,10 +160,9 @@ int startListen()
 {
   if ((sd = socket (AF_INET, SOCK_STREAM, 0)) == -1)
         {
-            perror ("[server]Eroare la socket().\n");
+            perror ("[server]Error on socket()\n");
             return errno;
         }
-        /* utilizarea optiunii SO_REUSEADDR */
         int on=1;
         setsockopt(sd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
 
@@ -175,13 +176,13 @@ int startListen()
 
         if (bind (sd, (struct sockaddr *) &server, sizeof (struct sockaddr)) == -1)
           {
-            perror ("[server]Eroare la bind().\n");
+            perror ("[server]Error on bind()\n");
             return errno;
           }
 
         if (listen (sd, 2) == -1)
           {
-            perror ("[server]Eroare la listen().\n");
+            perror ("[server]Errror on listen()\n");
             return errno;
           }
     return 1;
@@ -189,28 +190,27 @@ int startListen()
 
 void acceptClients()
 {
-  while (1)
+  while (RUNNING)
   {
     int client;
-    thData * td; //parametru functia executata de thread     
+    thData * td; 
     socklen_t length = sizeof (from);
-    printf ("[server]Asteptam la portul %d...\n",PORT);
+    printf ("[server]Waiting on port %d\n",PORT);
     fflush (stdout);
-    /* acceptam un client (stare blocanta pina la realizarea conexiunii) */
-    if ( (client = accept (sd, (struct sockaddr *) &from, &length)) < 0)
+
+    if ((client = accept (sd, (struct sockaddr *) &from, &length)) < 0)
 	  {
-	      perror ("[server]Eroare la accept().\n");
+	      perror ("[server]Error on accept()\n");
 	      continue;
 	  }
 
-    /* s-a realizat conexiunea, se astepta mesajul */
-	  //int cl; //descriptorul intors de accept
+    if(RUNNING==false)
+      break;
 
 	  td=(struct thData*)malloc(sizeof(struct thData));	
 	  td->idThread=i++;
 	  td->cl=client;
 
-	  pthread_create(&th[i], NULL, &treat, td);	      
-				
+	  pthread_create(&th[i], NULL, &treat, td);	      	
 	} 
 }

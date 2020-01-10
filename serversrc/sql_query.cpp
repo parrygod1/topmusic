@@ -594,18 +594,6 @@ void SQLQuery::getQueryResult(sqlite3_stmt *stmt, char result[])
 {
     memset(result, '\0', 500);
     strcat(result, "\n");
-    /*strcat(result,"\n");
-    strcat(result,"--------------------------------------------");
-    strcat(result,"\n");
-    for(int i=0;i<sqlite3_column_count(stmt);i++)
-    {
-        strcat(result, sqlite3_column_name(stmt, i));
-        strcat(result,", ");
-    }
-    strcat(result,"\n");
-    strcat(result,"--------------------------------------------");
-    strcat(result,"\n");
-    int j=0;*/
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
     {
         for(int j=0;j<sqlite3_column_count(stmt);j++)
@@ -645,7 +633,7 @@ void SQLQuery::openDB()
     {
         std::cout << "Can't open database\n";
     } else {
-        std::cout << "Open database successfully\n";
+        std::cout << "Opened database successfully\n";
     }
 }
 

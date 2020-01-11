@@ -206,12 +206,6 @@ void acceptClients()
 	      continue;
 	  }
 
-    if(RUNNING==false)
-      {
-        close(client);
-        break;
-      }
-
 	  td=(struct thData*)malloc(sizeof(struct thData));	
 	  td->idThread=i++;
 	  td->cl=client;

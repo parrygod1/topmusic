@@ -46,6 +46,8 @@ int main(int argc, char **argv)
     acceptClients();
 
     delete server_cmd;
+    close(sd);
+    return 0;
 };	
 
 
@@ -121,7 +123,7 @@ bool readClient(void *arg, char cmd[])
 	  if (read (tdL.cl, cmd, MSG_BUFSIZE) <= 0)
 		{
 			  printf("[Thread %d]",tdL.idThread);
-			  perror ("Eroare la read() de la client.\n");
+			  perror ("Error on read()\n");
         return 0;
 		}
     return 1;
@@ -205,7 +207,10 @@ void acceptClients()
 	  }
 
     if(RUNNING==false)
-      break;
+      {
+        close(client);
+        break;
+      }
 
 	  td=(struct thData*)malloc(sizeof(struct thData));	
 	  td->idThread=i++;

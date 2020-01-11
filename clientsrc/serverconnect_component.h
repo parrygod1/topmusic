@@ -14,7 +14,7 @@ class serverconnect_Component
 {
     private:
     char buf[MSG_BUFSIZE];
-    struct sockaddr_in server;	// structura folosita pentru conectare 
+    struct sockaddr_in server;
     SQLMSG msgstatus;
 
     SQLMSG readMsgstatus(char *buf)
@@ -30,18 +30,18 @@ class serverconnect_Component
     {
         if ((socketDescriptor = socket (AF_INET, SOCK_STREAM, 0)) == -1)
           {
-            perror ("Eroare la socket().\n");
+            perror ("Error on socket().\n");
             return false;
           } 
 
-        /* umplem structura folosita pentru realizarea conexiunii cu serverul */
+
         server.sin_family = AF_INET;
         server.sin_addr.s_addr = inet_addr(ip);
         server.sin_port = htons (port);
 
         if (connect (socketDescriptor, (struct sockaddr *) &server,sizeof (struct sockaddr)) == -1)
           {
-            perror ("[client]Eroare la connect().\n");
+            perror ("[client]Error on connect().\n");
             return false;
           }
         return true;
@@ -58,7 +58,7 @@ class serverconnect_Component
         {
             if (write (socketDescriptor, &buf, MSG_BUFSIZE) <= 0)
             {
-              perror ("[client]Eroare la write() spre server.\n");
+              perror ("[client]Error on write()\n");
               return errno;
             } 
         }
@@ -75,7 +75,7 @@ class serverconnect_Component
 
         if (read (socketDescriptor, &buf, MSG_BUFSIZE) < 0)
         {
-            perror ("[client]Eroare la read() de la server.\n");
+            perror ("[client]Error on read()\n");
             return errno;
         }
 

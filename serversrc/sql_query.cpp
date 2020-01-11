@@ -631,7 +631,8 @@ void SQLQuery::openDB()
     
     if(rc)
     {
-        std::cout << "Can't open database\n";
+        std::cout << "Can't open database -- Make sure 'topmusic.db' is in the same folder as the server\n";
+        exit(0);
     } else {
         std::cout << "Opened database successfully\n";
     }
